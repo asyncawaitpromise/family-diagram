@@ -126,6 +126,10 @@ const Home = () => {
   const handleMouseMove = (e) => {
     // Don't interfere with shape dragging
     if (!isPanning) return;
+    
+    const stage = e.target.getStage();
+    setStageX(stage.x());
+    setStageY(stage.y());
   };
 
   // Handle pan end
@@ -341,9 +345,7 @@ const Home = () => {
         setDragPosition({ id: shape.id, x: shape.x, y: shape.y });
       },
       onDragMove: (e) => {
-        if (shape.id === selectedId) {
-          setDragPosition({ id: shape.id, x: e.target.x(), y: e.target.y() });
-        }
+        // Remove live position updates during drag to prevent flickering
       },
       onDragEnd: (e) => {
         updateShapePosition(shape.id, e.target.position());
@@ -365,10 +367,8 @@ const Home = () => {
 
   const selectedShape = shapes.find(shape => shape.id === selectedId);
   
-  // Use drag position for selection border if object is being dragged
-  const displayPosition = dragPosition && dragPosition.id === selectedId 
-    ? dragPosition 
-    : selectedShape;
+  // Keep selection border stable during drag by using original position
+  const displayPosition = selectedShape;
 
   return (
     <div 
@@ -379,7 +379,7 @@ const Home = () => {
     >
       {/* Version */}
       <div className="absolute top-4 right-4 z-10 text-sm text-gray-500">
-        v.0.0.4
+        v.0.0.5
       </div>
 
       {/* Toolbar */}
