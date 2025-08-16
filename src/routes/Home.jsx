@@ -104,6 +104,9 @@ const Home = () => {
 
   // Handle pan start
   const handleMouseDown = (e) => {
+    // Check if target has getStage method (is a Konva object)
+    if (!e.target || typeof e.target.getStage !== 'function') return;
+    
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
       setSelectedId(null);
@@ -114,6 +117,9 @@ const Home = () => {
   // Handle pan move
   const handleMouseMove = (e) => {
     if (!isPanning) return;
+    
+    // Check if target has getStage method (is a Konva object)
+    if (!e.target || typeof e.target.getStage !== 'function') return;
     
     const stage = e.target.getStage();
     setStageX(stage.x());
@@ -128,6 +134,9 @@ const Home = () => {
   // Handle touch pan and zoom
   const handleTouchStart = (e) => {
     if (touchDragType) return; // Don't interfere with toolbar drag
+    
+    // Check if target has getStage method (is a Konva object)
+    if (!e.target || typeof e.target.getStage !== 'function') return;
     
     const stage = e.target.getStage();
     if (e.target !== stage) return; // Only handle touches on empty stage
@@ -162,6 +171,9 @@ const Home = () => {
       return;
     }
 
+    // Check if target has getStage method (is a Konva object)
+    if (!e.target || typeof e.target.getStage !== 'function') return;
+    
     const stage = e.target.getStage();
     if (e.target !== stage) return;
     
@@ -253,14 +265,20 @@ const Home = () => {
     
     setIsPanning(false);
     
-    const stage = e.target.getStage();
-    if (stage) {
-      stage.setAttrs({ lastDist: 0 });
+    // Check if target has getStage method (is a Konva object)
+    if (e.target && typeof e.target.getStage === 'function') {
+      const stage = e.target.getStage();
+      if (stage) {
+        stage.setAttrs({ lastDist: 0 });
+      }
     }
   };
 
   // Deselect when clicking empty area
   const checkDeselect = (e) => {
+    // Check if target has getStage method (is a Konva object)
+    if (!e.target || typeof e.target.getStage !== 'function') return;
+    
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
       setSelectedId(null);
