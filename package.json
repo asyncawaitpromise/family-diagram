@@ -12,6 +12,7 @@
     "tbuild": "vite build && cd dist && tar -czf o.tar ."
   },
   "dependencies": {
+    "eruda": "^3.4.3",
     "konva": "^9.3.22",
     "pocketbase": "^0.25.0",
     "react": "^19.1.1",
