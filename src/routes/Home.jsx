@@ -22,7 +22,7 @@ const Home = () => {
       x: Math.random() * (stageSize.width - 100) + 50,
       y: Math.random() * (stageSize.height - 100) + 50,
       fill: '#3b82f6',
-      draggable: true,
+      draggable: false,
     };
     setShapes([...shapes, newShape]);
   };
@@ -57,13 +57,14 @@ const Home = () => {
 
   // Render shape based on type
   const renderShape = (shape) => {
+    const isSelected = shape.id === selectedId;
     const commonProps = {
       key: shape.id,
       id: shape.id,
       x: shape.x,
       y: shape.y,
       fill: shape.fill,
-      draggable: true,
+      draggable: isSelected,
       onClick: () => selectShape(shape.id),
       onTap: () => selectShape(shape.id),
       onDragEnd: (e) => updateShapePosition(shape.id, e.target.position()),
@@ -84,7 +85,7 @@ const Home = () => {
   const selectedShape = shapes.find(shape => shape.id === selectedId);
 
   return (
-    <div className="w-screen h-screen relative overflow-hidden">
+    <div className="w-screen h-screen max-h-[100svh] relative overflow-hidden">
       {/* Toolbar */}
       <div className="absolute top-4 left-4 z-10 bg-base-100 shadow-lg rounded-lg p-2 flex gap-2">
         <button
@@ -105,14 +106,6 @@ const Home = () => {
         >
           <StarIcon size={16} />
         </button>
-        {selectedId && (
-          <button
-            className="btn btn-error btn-sm ml-2"
-            onClick={deleteSelected}
-          >
-            <X size={16} />
-          </button>
-        )}
       </div>
 
       {/* Canvas */}
@@ -126,19 +119,49 @@ const Home = () => {
         <Layer>
           {shapes.map(renderShape)}
           
-          {/* Selection border */}
+          {/* Selection border and delete button */}
           {selectedShape && (
-            <Rect
-              x={selectedShape.x - 35}
-              y={selectedShape.y - 35}
-              width={70}
-              height={70}
-              stroke="#ef4444"
-              strokeWidth={2}
-              dash={[5, 5]}
-              fill="transparent"
-              listening={false}
-            />
+            <>
+              <Rect
+                x={selectedShape.x - 35}
+                y={selectedShape.y - 35}
+                width={70}
+                height={70}
+                stroke="#ef4444"
+                strokeWidth={2}
+                dash={[5, 5]}
+                fill="transparent"
+                listening={false}
+              />
+              <Circle
+                x={selectedShape.x + 35}
+                y={selectedShape.y - 35}
+                radius={12}
+                fill="#ef4444"
+                stroke="white"
+                strokeWidth={2}
+                onClick={deleteSelected}
+                onTap={deleteSelected}
+              />
+              <Line
+                points={[
+                  selectedShape.x + 35 - 6, selectedShape.y - 35 - 6,
+                  selectedShape.x + 35 + 6, selectedShape.y - 35 + 6
+                ]}
+                stroke="white"
+                strokeWidth={2}
+                listening={false}
+              />
+              <Line
+                points={[
+                  selectedShape.x + 35 + 6, selectedShape.y - 35 - 6,
+                  selectedShape.x + 35 - 6, selectedShape.y - 35 + 6
+                ]}
+                stroke="white"
+                strokeWidth={2}
+                listening={false}
+              />
+            </>
           )}
         </Layer>
       </Stage>
