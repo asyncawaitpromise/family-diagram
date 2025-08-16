@@ -430,6 +430,14 @@ const Home = () => {
         x={stageX}
         y={stageY}
         draggable={true}
+        onDragMove={(e) => {
+          setStageX(e.target.x());
+          setStageY(e.target.y());
+        }}
+        onDragEnd={(e) => {
+          setStageX(e.target.x());
+          setStageY(e.target.y());
+        }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
