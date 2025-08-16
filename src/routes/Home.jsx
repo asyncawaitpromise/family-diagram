@@ -6,6 +6,8 @@ const Home = () => {
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [stageSize, setStageSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragType, setDragType] = useState(null);
   const trRef = useRef();
   const stageRef = useRef();
 
@@ -15,16 +17,39 @@ const Home = () => {
   };
 
   // Add shape to canvas
-  const addShape = (type) => {
+  const addShape = (type, x = null, y = null) => {
     const newShape = {
       id: Date.now().toString(),
       type,
-      x: Math.random() * (stageSize.width - 100) + 50,
-      y: Math.random() * (stageSize.height - 100) + 50,
+      x: x !== null ? x : Math.random() * (stageSize.width - 100) + 50,
+      y: y !== null ? y : Math.random() * (stageSize.height - 100) + 50,
       fill: '#3b82f6',
       draggable: false,
     };
     setShapes([...shapes, newShape]);
+    setSelectedId(newShape.id);
+  };
+
+  // Handle drag start from toolbar
+  const handleToolbarDragStart = (type) => {
+    setIsDragging(true);
+    setDragType(type);
+  };
+
+  // Handle drop on canvas
+  const handleCanvasDrop = (e) => {
+    if (isDragging && dragType) {
+      const stage = e.target.getStage();
+      const pointerPosition = stage.getPointerPosition();
+      addShape(dragType, pointerPosition.x, pointerPosition.y);
+      setIsDragging(false);
+      setDragType(null);
+    }
+  };
+
+  // Handle drag over canvas
+  const handleCanvasDragOver = (e) => {
+    e.preventDefault();
   };
 
   // Select shape
@@ -99,18 +124,24 @@ const Home = () => {
         <button
           className="btn btn-primary btn-sm"
           onClick={() => addShape('circle')}
+          draggable
+          onDragStart={() => handleToolbarDragStart('circle')}
         >
           <CircleIcon size={16} />
         </button>
         <button
           className="btn btn-primary btn-sm"
           onClick={() => addShape('rect')}
+          draggable
+          onDragStart={() => handleToolbarDragStart('rect')}
         >
           <Square size={16} />
         </button>
         <button
           className="btn btn-primary btn-sm"
           onClick={() => addShape('star')}
+          draggable
+          onDragStart={() => handleToolbarDragStart('star')}
         >
           <StarIcon size={16} />
         </button>
@@ -123,6 +154,8 @@ const Home = () => {
         height={stageSize.height}
         onMouseDown={checkDeselect}
         onTouchStart={checkDeselect}
+        onDrop={handleCanvasDrop}
+        onDragOver={handleCanvasDragOver}
       >
         <Layer>
           {shapes.map(renderShape)}
@@ -131,10 +164,10 @@ const Home = () => {
           {selectedShape && (
             <>
               <Rect
-                x={selectedShape.x - 35}
-                y={selectedShape.y - 35}
-                width={70}
-                height={70}
+                x={selectedShape.type === 'rect' ? selectedShape.x - 35 : selectedShape.x - 35}
+                y={selectedShape.type === 'rect' ? selectedShape.y - 35 : selectedShape.y - 35}
+                width={selectedShape.type === 'rect' ? 130 : 70}
+                height={selectedShape.type === 'rect' ? 130 : 70}
                 stroke="#ef4444"
                 strokeWidth={2}
                 dash={[5, 5]}
@@ -142,8 +175,8 @@ const Home = () => {
                 listening={false}
               />
               <Circle
-                x={selectedShape.x + 35}
-                y={selectedShape.y - 35}
+                x={selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35}
+                y={selectedShape.type === 'rect' ? selectedShape.y - 35 : selectedShape.y - 35}
                 radius={12}
                 fill="#ef4444"
                 stroke="white"
@@ -153,8 +186,10 @@ const Home = () => {
               />
               <Line
                 points={[
-                  selectedShape.x + 35 - 6, selectedShape.y - 35 - 6,
-                  selectedShape.x + 35 + 6, selectedShape.y - 35 + 6
+                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) - 6, 
+                  selectedShape.y - 35 - 6,
+                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) + 6, 
+                  selectedShape.y - 35 + 6
                 ]}
                 stroke="white"
                 strokeWidth={2}
@@ -162,8 +197,10 @@ const Home = () => {
               />
               <Line
                 points={[
-                  selectedShape.x + 35 + 6, selectedShape.y - 35 - 6,
-                  selectedShape.x + 35 - 6, selectedShape.y - 35 + 6
+                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) + 6, 
+                  selectedShape.y - 35 - 6,
+                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) - 6, 
+                  selectedShape.y - 35 + 6
                 ]}
                 stroke="white"
                 strokeWidth={2}
