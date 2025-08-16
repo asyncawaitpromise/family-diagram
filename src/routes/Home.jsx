@@ -435,10 +435,10 @@ const Home = () => {
           {selectedShape && (
             <>
               <Rect
-                x={selectedShape.x - 35}
-                y={selectedShape.y - 35}
-                width={70}
-                height={70}
+                x={selectedShape.type === 'rect' ? selectedShape.x - 5 : selectedShape.x - 35}
+                y={selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35}
+                width={selectedShape.type === 'rect' ? 70 : 70}
+                height={selectedShape.type === 'rect' ? 70 : 70}
                 stroke="#ef4444"
                 strokeWidth={2}
                 dash={[5, 5]}
@@ -446,8 +446,8 @@ const Home = () => {
                 listening={false}
               />
               <Circle
-                x={selectedShape.x + 35}
-                y={selectedShape.y - 35}
+                x={selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35}
+                y={selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35}
                 radius={12}
                 fill="#ef4444"
                 stroke="white"
@@ -457,10 +457,10 @@ const Home = () => {
               />
               <Line
                 points={[
-                  selectedShape.x + 35 - 6, 
-                  selectedShape.y - 35 - 6,
-                  selectedShape.x + 35 + 6, 
-                  selectedShape.y - 35 + 6
+                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) - 6, 
+                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) - 6,
+                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) + 6, 
+                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) + 6
                 ]}
                 stroke="white"
                 strokeWidth={2}
@@ -468,10 +468,10 @@ const Home = () => {
               />
               <Line
                 points={[
-                  selectedShape.x + 35 + 6, 
-                  selectedShape.y - 35 - 6,
-                  selectedShape.x + 35 - 6, 
-                  selectedShape.y - 35 + 6
+                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) + 6, 
+                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) - 6,
+                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) - 6, 
+                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) + 6
                 ]}
                 stroke="white"
                 strokeWidth={2}
