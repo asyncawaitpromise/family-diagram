@@ -362,6 +362,11 @@ const Home = () => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Version */}
+      <div className="absolute top-4 right-4 z-10 text-sm text-gray-500">
+        v.0.0.1
+      </div>
+
       {/* Toolbar */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 bg-base-100 shadow-lg rounded-lg p-2 flex gap-2">
         <button
