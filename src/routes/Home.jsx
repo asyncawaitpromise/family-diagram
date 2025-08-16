@@ -375,7 +375,7 @@ const Home = () => {
     >
       {/* Version */}
       <div className="absolute top-4 right-4 z-10 text-sm text-gray-500">
-        v.0.0.1
+        v.0.0.2
       </div>
 
       {/* Toolbar */}
