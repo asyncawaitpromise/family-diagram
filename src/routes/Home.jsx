@@ -115,6 +115,9 @@ const Home = () => {
     if (clickedOnEmpty) {
       setSelectedId(null);
       setIsPanning(true);
+    } else {
+      // Clicked on a shape, disable stage panning
+      setIsPanning(false);
     }
   };
 
@@ -143,7 +146,13 @@ const Home = () => {
     if (!e.target || typeof e.target.getStage !== 'function') return;
     
     const stage = e.target.getStage();
-    if (e.target !== stage) return; // Only handle touches on empty stage
+    const clickedOnEmpty = e.target === stage;
+    
+    if (!clickedOnEmpty) {
+      // Clicked on a shape, disable stage panning
+      setIsPanning(false);
+      return;
+    }
     
     // Prevent default touch behaviors to avoid page scrolling
     if (e.evt && e.evt.preventDefault) {
@@ -429,7 +438,7 @@ const Home = () => {
         scaleY={stageScale}
         x={stageX}
         y={stageY}
-        draggable={true}
+        draggable={isPanning}
         onDragMove={(e) => {
           setStageX(e.target.x());
           setStageY(e.target.y());
