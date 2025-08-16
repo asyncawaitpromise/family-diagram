@@ -14,6 +14,7 @@ const Home = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [touchDragType, setTouchDragType] = useState(null);
   const [touchDragPosition, setTouchDragPosition] = useState(null);
+  const [hasDraggedFromButton, setHasDraggedFromButton] = useState(false);
   const trRef = useRef();
   const stageRef = useRef();
 
@@ -62,6 +63,7 @@ const Home = () => {
   const handleToolbarTouchStart = (type, e) => {
     e.preventDefault();
     setTouchDragType(type);
+    setHasDraggedFromButton(false);
     const touch = e.touches[0];
     setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
   };
@@ -156,6 +158,7 @@ const Home = () => {
       e.preventDefault();
       const touch = e.touches[0];
       setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
+      setHasDraggedFromButton(true);
       return;
     }
 
@@ -221,26 +224,30 @@ const Home = () => {
       // Handle toolbar drag end
       e.preventDefault();
       
-      const stage = stageRef.current;
-      const stageRect = stage.container().getBoundingClientRect();
-      const touch = e.changedTouches[0];
-      
-      // Check if touch ended over the stage
-      if (
-        touch.clientX >= stageRect.left &&
-        touch.clientX <= stageRect.right &&
-        touch.clientY >= stageRect.top &&
-        touch.clientY <= stageRect.bottom
-      ) {
-        // Convert screen coordinates to stage coordinates
-        const localX = (touch.clientX - stageRect.left - stageX) / stageScale;
-        const localY = (touch.clientY - stageRect.top - stageY) / stageScale;
+      // Only create shape from drag if the user actually dragged
+      if (hasDraggedFromButton) {
+        const stage = stageRef.current;
+        const stageRect = stage.container().getBoundingClientRect();
+        const touch = e.changedTouches[0];
         
-        addShape(touchDragType, localX, localY);
+        // Check if touch ended over the stage
+        if (
+          touch.clientX >= stageRect.left &&
+          touch.clientX <= stageRect.right &&
+          touch.clientY >= stageRect.top &&
+          touch.clientY <= stageRect.bottom
+        ) {
+          // Convert screen coordinates to stage coordinates
+          const localX = (touch.clientX - stageRect.left - stageX) / stageScale;
+          const localY = (touch.clientY - stageRect.top - stageY) / stageScale;
+          
+          addShape(touchDragType, localX, localY);
+        }
       }
       
       setTouchDragType(null);
       setTouchDragPosition(null);
+      setHasDraggedFromButton(false);
       return;
     }
     
