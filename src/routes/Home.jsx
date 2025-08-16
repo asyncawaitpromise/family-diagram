@@ -59,46 +59,11 @@ const Home = () => {
   };
 
   // Handle touch start on toolbar buttons
-  const handleTouchStart = (type, e) => {
+  const handleToolbarTouchStart = (type, e) => {
     e.preventDefault();
     setTouchDragType(type);
     const touch = e.touches[0];
     setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
-  };
-
-  // Handle touch move from toolbar
-  const handleTouchMove = (e) => {
-    if (!touchDragType) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
-  };
-
-  // Handle touch end for toolbar drag
-  const handleTouchEnd = (e) => {
-    if (!touchDragType) return;
-    e.preventDefault();
-    
-    const stage = stageRef.current;
-    const stageRect = stage.container().getBoundingClientRect();
-    const touch = e.changedTouches[0];
-    
-    // Check if touch ended over the stage
-    if (
-      touch.clientX >= stageRect.left &&
-      touch.clientX <= stageRect.right &&
-      touch.clientY >= stageRect.top &&
-      touch.clientY <= stageRect.bottom
-    ) {
-      // Convert screen coordinates to stage coordinates
-      const localX = (touch.clientX - stageRect.left - stageX) / stageScale;
-      const localY = (touch.clientY - stageRect.top - stageY) / stageScale;
-      
-      addShape(touchDragType, localX, localY);
-    }
-    
-    setTouchDragType(null);
-    setTouchDragPosition(null);
   };
 
   // Select shape
@@ -156,6 +121,135 @@ const Home = () => {
   // Handle pan end
   const handleMouseUp = () => {
     setIsPanning(false);
+  };
+
+  // Handle touch pan and zoom
+  const handleTouchStart = (e) => {
+    if (touchDragType) return; // Don't interfere with toolbar drag
+    
+    const stage = e.target.getStage();
+    if (e.target !== stage) return; // Only handle touches on empty stage
+    
+    const touches = e.evt.touches;
+    
+    if (touches.length === 1) {
+      // Single touch - start panning
+      setIsPanning(true);
+      setSelectedId(null);
+    } else if (touches.length === 2) {
+      // Two touches - prepare for pinch zoom
+      setIsPanning(false);
+      const touch1 = touches[0];
+      const touch2 = touches[1];
+      const dist = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      stage.setAttrs({ lastDist: dist });
+    }
+  };
+
+  // Handle touch move for pan and zoom
+  const handleTouchMove = (e) => {
+    if (touchDragType) {
+      // Handle toolbar drag
+      e.preventDefault();
+      const touch = e.touches[0];
+      setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
+      return;
+    }
+
+    const stage = e.target.getStage();
+    if (e.target !== stage) return;
+    
+    const touches = e.evt.touches;
+    
+    if (touches.length === 1 && isPanning) {
+      // Single touch panning
+      setStageX(stage.x());
+      setStageY(stage.y());
+    } else if (touches.length === 2) {
+      // Two touch pinch zoom
+      e.evt.preventDefault();
+      
+      const touch1 = touches[0];
+      const touch2 = touches[1];
+      const newDist = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      
+      const lastDist = stage.getAttr('lastDist') || newDist;
+      
+      if (lastDist > 0) {
+        const scale = newDist / lastDist;
+        const oldScale = stage.scaleX();
+        const newScale = Math.max(0.1, Math.min(5, oldScale * scale));
+        
+        // Get center point of the two touches
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+        
+        const stageRect = stage.container().getBoundingClientRect();
+        const pointer = {
+          x: centerX - stageRect.left,
+          y: centerY - stageRect.top
+        };
+        
+        const mousePointTo = {
+          x: (pointer.x - stage.x()) / oldScale,
+          y: (pointer.y - stage.y()) / oldScale,
+        };
+        
+        const newPos = {
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+        };
+        
+        setStageScale(newScale);
+        setStageX(newPos.x);
+        setStageY(newPos.y);
+      }
+      
+      stage.setAttrs({ lastDist: newDist });
+    }
+  };
+
+  // Handle touch end
+  const handleTouchEnd = (e) => {
+    if (touchDragType) {
+      // Handle toolbar drag end
+      e.preventDefault();
+      
+      const stage = stageRef.current;
+      const stageRect = stage.container().getBoundingClientRect();
+      const touch = e.changedTouches[0];
+      
+      // Check if touch ended over the stage
+      if (
+        touch.clientX >= stageRect.left &&
+        touch.clientX <= stageRect.right &&
+        touch.clientY >= stageRect.top &&
+        touch.clientY <= stageRect.bottom
+      ) {
+        // Convert screen coordinates to stage coordinates
+        const localX = (touch.clientX - stageRect.left - stageX) / stageScale;
+        const localY = (touch.clientY - stageRect.top - stageY) / stageScale;
+        
+        addShape(touchDragType, localX, localY);
+      }
+      
+      setTouchDragType(null);
+      setTouchDragPosition(null);
+      return;
+    }
+    
+    setIsPanning(false);
+    
+    const stage = e.target.getStage();
+    if (stage) {
+      stage.setAttrs({ lastDist: 0 });
+    }
   };
 
   // Deselect when clicking empty area
@@ -225,13 +319,13 @@ const Home = () => {
       onTouchEnd={handleTouchEnd}
     >
       {/* Toolbar */}
-      <div className="absolute top-4 left-4 z-10 bg-base-100 shadow-lg rounded-lg p-2 flex gap-2">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 bg-base-100 shadow-lg rounded-lg p-2 flex gap-2">
         <button
           className="btn btn-primary btn-sm"
           onClick={() => addShape('circle')}
           draggable
           onDragStart={() => handleToolbarDragStart('circle')}
-          onTouchStart={(e) => handleTouchStart('circle', e)}
+          onTouchStart={(e) => handleToolbarTouchStart('circle', e)}
         >
           <CircleIcon size={16} />
         </button>
@@ -240,7 +334,7 @@ const Home = () => {
           onClick={() => addShape('rect')}
           draggable
           onDragStart={() => handleToolbarDragStart('rect')}
-          onTouchStart={(e) => handleTouchStart('rect', e)}
+          onTouchStart={(e) => handleToolbarTouchStart('rect', e)}
         >
           <Square size={16} />
         </button>
@@ -249,7 +343,7 @@ const Home = () => {
           onClick={() => addShape('star')}
           draggable
           onDragStart={() => handleToolbarDragStart('star')}
-          onTouchStart={(e) => handleTouchStart('star', e)}
+          onTouchStart={(e) => handleToolbarTouchStart('star', e)}
         >
           <StarIcon size={16} />
         </button>
@@ -289,7 +383,7 @@ const Home = () => {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onTouchStart={checkDeselect}
+        onTouchStart={handleTouchStart}
         onDrop={handleCanvasDrop}
         onDragOver={handleCanvasDragOver}
       >
