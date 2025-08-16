@@ -141,6 +141,9 @@ const Home = () => {
     const stage = e.target.getStage();
     if (e.target !== stage) return; // Only handle touches on empty stage
     
+    // Prevent default touch behaviors to avoid page scrolling
+    e.evt.preventDefault();
+    
     const touches = e.evt.touches;
     
     if (touches.length === 1) {
@@ -181,6 +184,7 @@ const Home = () => {
     
     if (touches.length === 1 && isPanning) {
       // Single touch panning
+      e.evt.preventDefault();
       setStageX(stage.x());
       setStageY(stage.y());
     } else if (touches.length === 2) {
@@ -263,6 +267,11 @@ const Home = () => {
       return;
     }
     
+    // Prevent default touch behaviors
+    if (isPanning) {
+      e.evt.preventDefault();
+    }
+    
     setIsPanning(false);
     
     // Check if target has getStage method (is a Konva object)
@@ -340,6 +349,7 @@ const Home = () => {
   return (
     <div 
       className="w-screen h-screen max-h-[100svh] relative overflow-hidden"
+      style={{ touchAction: 'none' }}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
@@ -403,7 +413,7 @@ const Home = () => {
         scaleY={stageScale}
         x={stageX}
         y={stageY}
-        draggable={isPanning}
+        draggable={true}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
