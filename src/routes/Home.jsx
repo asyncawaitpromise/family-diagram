@@ -48,10 +48,11 @@ const Home = () => {
     if (isDragging && dragType) {
       const stage = e.target.getStage();
       const pointerPosition = stage.getPointerPosition();
-      // Convert pointer position to stage coordinates accounting for pan and zoom
-      const localX = (pointerPosition.x - stageX) / stageScale;
-      const localY = (pointerPosition.y - stageY) / stageScale;
-      addShape(dragType, localX, localY);
+      // getPointerPosition() already returns coordinates relative to the stage
+      // We need to convert to world coordinates by accounting for stage transform
+      const worldX = (pointerPosition.x - stage.x()) / stage.scaleX();
+      const worldY = (pointerPosition.y - stage.y()) / stage.scaleY();
+      addShape(dragType, worldX, worldY);
       setIsDragging(false);
       setDragType(null);
     }
@@ -262,9 +263,10 @@ const Home = () => {
           touch.clientY >= stageRect.top &&
           touch.clientY <= stageRect.bottom
         ) {
-          // Convert screen coordinates to stage coordinates accounting for pan and zoom
-          const localX = (touch.clientX - stageRect.left - stageX) / stageScale;
-          const localY = (touch.clientY - stageRect.top - stageY) / stageScale;
+          // Convert screen coordinates to world coordinates accounting for pan and zoom
+          const stage = stageRef.current;
+          const localX = (touch.clientX - stageRect.left - stage.x()) / stage.scaleX();
+          const localY = (touch.clientY - stageRect.top - stage.y()) / stage.scaleY();
           
           addShape(touchDragType, localX, localY);
         }
