@@ -55,6 +55,13 @@ const Home = () => {
     ));
   };
 
+  // Handle drag move for live updates
+  const handleDragMove = (id, newPos) => {
+    setShapes(shapes.map(shape => 
+      shape.id === id ? { ...shape, x: newPos.x, y: newPos.y } : shape
+    ));
+  };
+
   // Render shape based on type
   const renderShape = (shape) => {
     const isSelected = shape.id === selectedId;
@@ -67,6 +74,7 @@ const Home = () => {
       draggable: isSelected,
       onClick: () => selectShape(shape.id),
       onTap: () => selectShape(shape.id),
+      onDragMove: (e) => handleDragMove(shape.id, e.target.position()),
       onDragEnd: (e) => updateShapePosition(shape.id, e.target.position()),
     };
 
