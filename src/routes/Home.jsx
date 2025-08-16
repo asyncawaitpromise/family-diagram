@@ -142,9 +142,11 @@ const Home = () => {
     if (e.target !== stage) return; // Only handle touches on empty stage
     
     // Prevent default touch behaviors to avoid page scrolling
-    e.evt.preventDefault();
+    if (e.evt && e.evt.preventDefault) {
+      e.evt.preventDefault();
+    }
     
-    const touches = e.evt.touches;
+    const touches = e.evt && e.evt.touches ? e.evt.touches : [];
     
     if (touches.length === 1) {
       // Single touch - start panning
@@ -180,16 +182,20 @@ const Home = () => {
     const stage = e.target.getStage();
     if (e.target !== stage) return;
     
-    const touches = e.evt.touches;
+    const touches = e.evt && e.evt.touches ? e.evt.touches : [];
     
     if (touches.length === 1 && isPanning) {
       // Single touch panning
-      e.evt.preventDefault();
+      if (e.evt && e.evt.preventDefault) {
+        e.evt.preventDefault();
+      }
       setStageX(stage.x());
       setStageY(stage.y());
     } else if (touches.length === 2) {
       // Two touch pinch zoom
-      e.evt.preventDefault();
+      if (e.evt && e.evt.preventDefault) {
+        e.evt.preventDefault();
+      }
       
       const touch1 = touches[0];
       const touch2 = touches[1];
@@ -268,7 +274,7 @@ const Home = () => {
     }
     
     // Prevent default touch behaviors
-    if (isPanning) {
+    if (isPanning && e.evt && e.evt.preventDefault) {
       e.evt.preventDefault();
     }
     
