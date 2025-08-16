@@ -401,10 +401,10 @@ const Home = () => {
           {selectedShape && (
             <>
               <Rect
-                x={selectedShape.type === 'rect' ? selectedShape.x - 35 : selectedShape.x - 35}
-                y={selectedShape.type === 'rect' ? selectedShape.y - 35 : selectedShape.y - 35}
-                width={selectedShape.type === 'rect' ? 130 : 70}
-                height={selectedShape.type === 'rect' ? 130 : 70}
+                x={selectedShape.x - 35}
+                y={selectedShape.y - 35}
+                width={70}
+                height={70}
                 stroke="#ef4444"
                 strokeWidth={2}
                 dash={[5, 5]}
@@ -412,8 +412,8 @@ const Home = () => {
                 listening={false}
               />
               <Circle
-                x={selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35}
-                y={selectedShape.type === 'rect' ? selectedShape.y - 35 : selectedShape.y - 35}
+                x={selectedShape.x + 35}
+                y={selectedShape.y - 35}
                 radius={12}
                 fill="#ef4444"
                 stroke="white"
@@ -423,9 +423,9 @@ const Home = () => {
               />
               <Line
                 points={[
-                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) - 6, 
+                  selectedShape.x + 35 - 6, 
                   selectedShape.y - 35 - 6,
-                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) + 6, 
+                  selectedShape.x + 35 + 6, 
                   selectedShape.y - 35 + 6
                 ]}
                 stroke="white"
@@ -434,9 +434,9 @@ const Home = () => {
               />
               <Line
                 points={[
-                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) + 6, 
+                  selectedShape.x + 35 + 6, 
                   selectedShape.y - 35 - 6,
-                  (selectedShape.type === 'rect' ? selectedShape.x + 95 : selectedShape.x + 35) - 6, 
+                  selectedShape.x + 35 - 6, 
                   selectedShape.y - 35 + 6
                 ]}
                 stroke="white"
