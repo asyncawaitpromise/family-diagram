@@ -329,12 +329,6 @@ const Home = () => {
     ));
   };
 
-  // Handle drag move for live updates
-  const handleDragMove = (id, newPos) => {
-    setShapes(shapes.map(shape => 
-      shape.id === id ? { ...shape, x: newPos.x, y: newPos.y } : shape
-    ));
-  };
 
   // Render shape based on type
   const renderShape = (shape) => {
@@ -348,7 +342,6 @@ const Home = () => {
       draggable: isSelected,
       onClick: () => selectShape(shape.id),
       onTap: () => selectShape(shape.id),
-      onDragMove: (e) => handleDragMove(shape.id, e.target.position()),
       onDragEnd: (e) => updateShapePosition(shape.id, e.target.position()),
     };
 
@@ -375,7 +368,7 @@ const Home = () => {
     >
       {/* Version */}
       <div className="absolute top-4 right-4 z-10 text-sm text-gray-500">
-        v.0.0.2
+        v.0.0.3
       </div>
 
       {/* Toolbar */}
