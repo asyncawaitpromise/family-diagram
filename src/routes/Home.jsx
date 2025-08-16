@@ -15,6 +15,7 @@ const Home = () => {
   const [touchDragType, setTouchDragType] = useState(null);
   const [touchDragPosition, setTouchDragPosition] = useState(null);
   const [hasDraggedFromButton, setHasDraggedFromButton] = useState(false);
+  const [dragPosition, setDragPosition] = useState(null);
   const trRef = useRef();
   const stageRef = useRef();
 
@@ -121,16 +122,10 @@ const Home = () => {
     }
   };
 
-  // Handle pan move
+  // Handle pan move  
   const handleMouseMove = (e) => {
+    // Don't interfere with shape dragging
     if (!isPanning) return;
-    
-    // Check if target has getStage method (is a Konva object)
-    if (!e.target || typeof e.target.getStage !== 'function') return;
-    
-    const stage = e.target.getStage();
-    setStageX(stage.x());
-    setStageY(stage.y());
   };
 
   // Handle pan end
@@ -342,7 +337,18 @@ const Home = () => {
       draggable: isSelected,
       onClick: () => selectShape(shape.id),
       onTap: () => selectShape(shape.id),
-      onDragEnd: (e) => updateShapePosition(shape.id, e.target.position()),
+      onDragStart: () => {
+        setDragPosition({ id: shape.id, x: shape.x, y: shape.y });
+      },
+      onDragMove: (e) => {
+        if (shape.id === selectedId) {
+          setDragPosition({ id: shape.id, x: e.target.x(), y: e.target.y() });
+        }
+      },
+      onDragEnd: (e) => {
+        updateShapePosition(shape.id, e.target.position());
+        setDragPosition(null);
+      },
     };
 
     switch (shape.type) {
@@ -358,6 +364,11 @@ const Home = () => {
   };
 
   const selectedShape = shapes.find(shape => shape.id === selectedId);
+  
+  // Use drag position for selection border if object is being dragged
+  const displayPosition = dragPosition && dragPosition.id === selectedId 
+    ? dragPosition 
+    : selectedShape;
 
   return (
     <div 
@@ -368,7 +379,7 @@ const Home = () => {
     >
       {/* Version */}
       <div className="absolute top-4 right-4 z-10 text-sm text-gray-500">
-        v.0.0.3
+        v.0.0.4
       </div>
 
       {/* Toolbar */}
@@ -452,11 +463,11 @@ const Home = () => {
           {shapes.map(renderShape)}
           
           {/* Selection border and delete button */}
-          {selectedShape && (
+          {selectedShape && displayPosition && (
             <>
               <Rect
-                x={selectedShape.type === 'rect' ? selectedShape.x - 5 : selectedShape.x - 35}
-                y={selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35}
+                x={selectedShape.type === 'rect' ? displayPosition.x - 5 : displayPosition.x - 35}
+                y={selectedShape.type === 'rect' ? displayPosition.y - 5 : displayPosition.y - 35}
                 width={selectedShape.type === 'rect' ? 70 : 70}
                 height={selectedShape.type === 'rect' ? 70 : 70}
                 stroke="#ef4444"
@@ -466,8 +477,8 @@ const Home = () => {
                 listening={false}
               />
               <Circle
-                x={selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35}
-                y={selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35}
+                x={selectedShape.type === 'rect' ? displayPosition.x + 65 : displayPosition.x + 35}
+                y={selectedShape.type === 'rect' ? displayPosition.y - 5 : displayPosition.y - 35}
                 radius={12}
                 fill="#ef4444"
                 stroke="white"
@@ -477,10 +488,10 @@ const Home = () => {
               />
               <Line
                 points={[
-                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) - 6, 
-                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) - 6,
-                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) + 6, 
-                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) + 6
+                  (selectedShape.type === 'rect' ? displayPosition.x + 65 : displayPosition.x + 35) - 6, 
+                  (selectedShape.type === 'rect' ? displayPosition.y - 5 : displayPosition.y - 35) - 6,
+                  (selectedShape.type === 'rect' ? displayPosition.x + 65 : displayPosition.x + 35) + 6, 
+                  (selectedShape.type === 'rect' ? displayPosition.y - 5 : displayPosition.y - 35) + 6
                 ]}
                 stroke="white"
                 strokeWidth={2}
@@ -488,10 +499,10 @@ const Home = () => {
               />
               <Line
                 points={[
-                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) + 6, 
-                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) - 6,
-                  (selectedShape.type === 'rect' ? selectedShape.x + 65 : selectedShape.x + 35) - 6, 
-                  (selectedShape.type === 'rect' ? selectedShape.y - 5 : selectedShape.y - 35) + 6
+                  (selectedShape.type === 'rect' ? displayPosition.x + 65 : displayPosition.x + 35) + 6, 
+                  (selectedShape.type === 'rect' ? displayPosition.y - 5 : displayPosition.y - 35) - 6,
+                  (selectedShape.type === 'rect' ? displayPosition.x + 65 : displayPosition.x + 35) - 6, 
+                  (selectedShape.type === 'rect' ? displayPosition.y - 5 : displayPosition.y - 35) + 6
                 ]}
                 stroke="white"
                 strokeWidth={2}
