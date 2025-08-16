@@ -8,6 +8,12 @@ const Home = () => {
   const [stageSize, setStageSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [isDragging, setIsDragging] = useState(false);
   const [dragType, setDragType] = useState(null);
+  const [stageScale, setStageScale] = useState(1);
+  const [stageX, setStageX] = useState(0);
+  const [stageY, setStageY] = useState(0);
+  const [isPanning, setIsPanning] = useState(false);
+  const [touchDragType, setTouchDragType] = useState(null);
+  const [touchDragPosition, setTouchDragPosition] = useState(null);
   const trRef = useRef();
   const stageRef = useRef();
 
@@ -52,9 +58,104 @@ const Home = () => {
     e.preventDefault();
   };
 
+  // Handle touch start on toolbar buttons
+  const handleTouchStart = (type, e) => {
+    e.preventDefault();
+    setTouchDragType(type);
+    const touch = e.touches[0];
+    setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
+  };
+
+  // Handle touch move from toolbar
+  const handleTouchMove = (e) => {
+    if (!touchDragType) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
+  };
+
+  // Handle touch end for toolbar drag
+  const handleTouchEnd = (e) => {
+    if (!touchDragType) return;
+    e.preventDefault();
+    
+    const stage = stageRef.current;
+    const stageRect = stage.container().getBoundingClientRect();
+    const touch = e.changedTouches[0];
+    
+    // Check if touch ended over the stage
+    if (
+      touch.clientX >= stageRect.left &&
+      touch.clientX <= stageRect.right &&
+      touch.clientY >= stageRect.top &&
+      touch.clientY <= stageRect.bottom
+    ) {
+      // Convert screen coordinates to stage coordinates
+      const localX = (touch.clientX - stageRect.left - stageX) / stageScale;
+      const localY = (touch.clientY - stageRect.top - stageY) / stageScale;
+      
+      addShape(touchDragType, localX, localY);
+    }
+    
+    setTouchDragType(null);
+    setTouchDragPosition(null);
+  };
+
   // Select shape
   const selectShape = (id) => {
     setSelectedId(id);
+  };
+
+  // Handle zoom
+  const handleWheel = (e) => {
+    e.evt.preventDefault();
+    
+    const stage = e.target.getStage();
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    const direction = e.evt.deltaY > 0 ? 1 : -1;
+    const scaleBy = 1.02;
+    const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    
+    const boundedScale = Math.max(0.1, Math.min(5, newScale));
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * boundedScale,
+      y: pointer.y - mousePointTo.y * boundedScale,
+    };
+
+    setStageScale(boundedScale);
+    setStageX(newPos.x);
+    setStageY(newPos.y);
+  };
+
+  // Handle pan start
+  const handleMouseDown = (e) => {
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      setSelectedId(null);
+      setIsPanning(true);
+    }
+  };
+
+  // Handle pan move
+  const handleMouseMove = (e) => {
+    if (!isPanning) return;
+    
+    const stage = e.target.getStage();
+    setStageX(stage.x());
+    setStageY(stage.y());
+  };
+
+  // Handle pan end
+  const handleMouseUp = () => {
+    setIsPanning(false);
   };
 
   // Deselect when clicking empty area
@@ -118,7 +219,11 @@ const Home = () => {
   const selectedShape = shapes.find(shape => shape.id === selectedId);
 
   return (
-    <div className="w-screen h-screen max-h-[100svh] relative overflow-hidden">
+    <div 
+      className="w-screen h-screen max-h-[100svh] relative overflow-hidden"
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Toolbar */}
       <div className="absolute top-4 left-4 z-10 bg-base-100 shadow-lg rounded-lg p-2 flex gap-2">
         <button
@@ -126,6 +231,7 @@ const Home = () => {
           onClick={() => addShape('circle')}
           draggable
           onDragStart={() => handleToolbarDragStart('circle')}
+          onTouchStart={(e) => handleTouchStart('circle', e)}
         >
           <CircleIcon size={16} />
         </button>
@@ -134,6 +240,7 @@ const Home = () => {
           onClick={() => addShape('rect')}
           draggable
           onDragStart={() => handleToolbarDragStart('rect')}
+          onTouchStart={(e) => handleTouchStart('rect', e)}
         >
           <Square size={16} />
         </button>
@@ -142,17 +249,46 @@ const Home = () => {
           onClick={() => addShape('star')}
           draggable
           onDragStart={() => handleToolbarDragStart('star')}
+          onTouchStart={(e) => handleTouchStart('star', e)}
         >
           <StarIcon size={16} />
         </button>
       </div>
+
+      {/* Touch drag preview */}
+      {touchDragType && touchDragPosition && (
+        <div
+          className="absolute pointer-events-none z-20"
+          style={{
+            left: touchDragPosition.x - 20,
+            top: touchDragPosition.y - 20,
+            width: 40,
+            height: 40,
+            backgroundColor: '#3b82f6',
+            borderRadius: touchDragType === 'circle' ? '50%' : touchDragType === 'rect' ? '0%' : '50%',
+            opacity: 0.7,
+          }}
+        >
+          {touchDragType === 'star' && (
+            <div className="w-full h-full flex items-center justify-center text-white">★</div>
+          )}
+        </div>
+      )}
 
       {/* Canvas */}
       <Stage
         ref={stageRef}
         width={stageSize.width}
         height={stageSize.height}
-        onMouseDown={checkDeselect}
+        scaleX={stageScale}
+        scaleY={stageScale}
+        x={stageX}
+        y={stageY}
+        draggable={isPanning}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
         onTouchStart={checkDeselect}
         onDrop={handleCanvasDrop}
         onDragOver={handleCanvasDragOver}
