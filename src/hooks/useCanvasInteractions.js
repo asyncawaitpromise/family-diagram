@@ -2,8 +2,9 @@ import { useCanvasStore } from '../stores/canvasStore';
 import { usePersistedShapeStore } from '../stores/persistedShapeStore';
 import { useInteractionStore } from '../stores/interactionStore';
 import { CANVAS_CONFIG } from '../constants/canvas';
+import { findShapesInSelection } from '../utils/collision';
 
-export const useCanvasInteractions = (stageRef) => {
+export const useCanvasInteractions = (stageRef, shapes) => {
   const { 
     stageScale, 
     stageX, 
@@ -14,8 +15,17 @@ export const useCanvasInteractions = (stageRef) => {
     updatePan 
   } = useCanvasStore();
   
-  const { deselectAll } = usePersistedShapeStore();
-  const { isTouchDragging, debugLog } = useInteractionStore();
+  const { deselectAll, setMultiSelect } = usePersistedShapeStore();
+  const { 
+    isTouchDragging, 
+    debugLog, 
+    startAreaSelection, 
+    updateAreaSelection, 
+    endAreaSelection,
+    isAreaSelecting,
+    areaSelectionStart,
+    areaSelectionEnd
+  } = useInteractionStore();
 
   const handleWheel = (e) => {
     // Handle both Konva events (e.evt) and regular DOM events (e)
@@ -40,33 +50,57 @@ export const useCanvasInteractions = (stageRef) => {
     
     const stage = e.target.getStage();
     const clickedOnEmpty = e.target === stage || e.target.constructor.name === 'Layer';
+    const evt = e.evt || e;
+    const isShiftPressed = evt.shiftKey;
     
     debugLog('CANVAS_MOUSE_DOWN', 'Canvas mouse down', {
       clickedOnEmpty,
       target: e.target.constructor.name,
       currentPanning: isPanning,
       stageTransform: { x: stageX, y: stageY, scale: stageScale },
-      targetId: e.target.id ? e.target.id() : 'no-id'
+      targetId: e.target.id ? e.target.id() : 'no-id',
+      isShiftPressed
     });
     
     if (clickedOnEmpty) {
-      deselectAll();
-      setIsPanning(true);
-      
-      // Store pan start position for manual panning
-      const pointer = stage.getPointerPosition();
-      stage._panStart = pointer;
-      stage._panStartStagePos = { x: stageX, y: stageY };
+      if (isShiftPressed) {
+        // Start area selection instead of panning
+        const pointer = stage.getPointerPosition();
+        const worldPos = {
+          x: (pointer.x - stageX) / stageScale,
+          y: (pointer.y - stageY) / stageScale
+        };
+        startAreaSelection(worldPos);
+        setIsPanning(false);
+      } else {
+        deselectAll();
+        setIsPanning(true);
+        
+        // Store pan start position for manual panning
+        const pointer = stage.getPointerPosition();
+        stage._panStart = pointer;
+        stage._panStartStagePos = { x: stageX, y: stageY };
+      }
     } else {
       setIsPanning(false);
     }
   };
 
   const handleMouseMove = (e) => {
-    if (!isPanning) return;
-    
     const stage = e.target.getStage();
     const pointer = stage.getPointerPosition();
+    
+    if (isAreaSelecting) {
+      // Update area selection
+      const worldPos = {
+        x: (pointer.x - stageX) / stageScale,
+        y: (pointer.y - stageY) / stageScale
+      };
+      updateAreaSelection(worldPos);
+      return;
+    }
+    
+    if (!isPanning) return;
     
     if (stage._panStart) {
       const dx = pointer.x - stage._panStart.x;
@@ -88,6 +122,20 @@ export const useCanvasInteractions = (stageRef) => {
   };
 
   const handleMouseUp = () => {
+    if (isAreaSelecting) {
+      // End area selection and find intersecting shapes
+      if (areaSelectionStart && areaSelectionEnd && shapes) {
+        const selectedShapeIds = findShapesInSelection(shapes, areaSelectionStart, areaSelectionEnd);
+        if (selectedShapeIds.length > 0) {
+          setMultiSelect(selectedShapeIds);
+        } else {
+          deselectAll();
+        }
+      }
+      endAreaSelection();
+      return;
+    }
+    
     if (isPanning) {
       debugLog('CANVAS_MOUSE_UP', 'Canvas mouse up - ending pan', {
         wasPanning: isPanning,

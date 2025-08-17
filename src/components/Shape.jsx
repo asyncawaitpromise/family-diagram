@@ -3,15 +3,16 @@ import { useRef, forwardRef } from 'react';
 import { CANVAS_CONFIG } from '../constants/canvas';
 import { useInteractionStore } from '../stores/interactionStore';
 
-const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDragMove, onDragStart, onDragEnd }, ref) => {
+const Shape = forwardRef(({ shape, displayShape, isSelected, onSelect, onPositionUpdate, onDragMove, onDragStart, onDragEnd, selectedIds, isMultiSelectMode, onMultiShapePositionUpdate, onMultiDragMove, allShapes }, ref) => {
   const { debugLog } = useInteractionStore();
   const shapeRef = useRef();
+  const renderShape = displayShape || shape;
   const commonProps = {
     ref: shapeRef,
     id: shape.id,
-    x: shape.x,
-    y: shape.y,
-    fill: shape.fill,
+    x: renderShape.x,
+    y: renderShape.y,
+    fill: renderShape.fill,
     draggable: isSelected,
     onClick: () => {
       debugLog('SHAPE_CLICK', `Shape ${shape.id} clicked`, { 
@@ -46,18 +47,37 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
     onDragMove: (e) => {
       const stage = e.target.getStage();
       const currentPos = e.target.position();
+      const deltaX = currentPos.x - shape.x;
+      const deltaY = currentPos.y - shape.y;
+      
       debugLog('SHAPE_DRAG_MOVE', `Shape ${shape.id} dragging`, {
         shapeId: shape.id,
         currentPosition: currentPos,
         originalPosition: { x: shape.x, y: shape.y },
         stageTransform: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
-        deltaX: currentPos.x - shape.x,
-        deltaY: currentPos.y - shape.y,
-        target: e.target.constructor.name
+        deltaX,
+        deltaY,
+        target: e.target.constructor.name,
+        isMultiSelectMode,
+        selectedIds
       });
       
-      // Notify the SelectionBorder of the new position
-      if (onDragMove) {
+      if (isMultiSelectMode && selectedIds && selectedIds.includes(shape.id) && onMultiDragMove) {
+        // Create position updates for all selected shapes during drag
+        const positions = {};
+        selectedIds.forEach(id => {
+          if (id === shape.id) {
+            positions[id] = currentPos;
+          } else {
+            const otherShape = allShapes?.find(s => s.id === id);
+            if (otherShape) {
+              positions[id] = { x: otherShape.x + deltaX, y: otherShape.y + deltaY };
+            }
+          }
+        });
+        onMultiDragMove(positions);
+      } else if (onDragMove) {
+        // Single shape drag move
         onDragMove(currentPos);
       }
     },
@@ -75,23 +95,17 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
         stagePosition: { x: stage.x(), y: stage.y() },
         targetX: e.target.x(),
         targetY: e.target.y(),
-        attrs: e.target.attrs
+        attrs: e.target.attrs,
+        isMultiSelectMode,
+        selectedIds
       });
       
       // Clear the drag position to reset SelectionBorder to store position
-      if (onDragMove) {
+      if (isMultiSelectMode && onMultiDragMove) {
+        onMultiDragMove({});
+      } else if (onDragMove) {
         onDragMove(null);
       }
-      
-      debugLog('SHAPE_CALLING_UPDATE', `Calling onPositionUpdate for shape ${shape.id}`, {
-        shapeId: shape.id,
-        finalPosition: finalPos,
-        finalPositionX: finalPos.x,
-        finalPositionY: finalPos.y,
-        originalPosition: { x: shape.x, y: shape.y },
-        onPositionUpdateExists: !!onPositionUpdate,
-        positionValid: !isNaN(finalPos.x) && !isNaN(finalPos.y) && isFinite(finalPos.x) && isFinite(finalPos.y)
-      });
       
       if (onDragEnd) {
         const shouldUpdate = onDragEnd(shape.id, finalPos, { x: shape.x, y: shape.y });
@@ -104,7 +118,29 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
       
       // Only update if position is valid
       if (!isNaN(finalPos.x) && !isNaN(finalPos.y) && isFinite(finalPos.x) && isFinite(finalPos.y)) {
-        onPositionUpdate(shape.id, finalPos);
+        if (isMultiSelectMode && selectedIds && selectedIds.includes(shape.id) && onMultiShapePositionUpdate) {
+          // Calculate the delta for group dragging
+          const deltaX = finalPos.x - shape.x;
+          const deltaY = finalPos.y - shape.y;
+          
+          // Create position updates for all selected shapes
+          const positions = {};
+          selectedIds.forEach(id => {
+            if (id === shape.id) {
+              positions[id] = finalPos;
+            } else {
+              // Find the original position of this shape and apply delta
+              const otherShape = allShapes?.find(s => s.id === id);
+              if (otherShape) {
+                positions[id] = { x: otherShape.x + deltaX, y: otherShape.y + deltaY };
+              }
+            }
+          });
+          
+          onMultiShapePositionUpdate(positions);
+        } else {
+          onPositionUpdate(shape.id, finalPos);
+        }
       } else {
         debugLog('SHAPE_INVALID_POSITION', `Invalid position detected for shape ${shape.id}`, {
           shapeId: shape.id,
@@ -117,7 +153,7 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
     },
   };
 
-  switch (shape.type) {
+  switch (renderShape.type) {
     case 'circle':
       return <Circle {...commonProps} radius={CANVAS_CONFIG.SHAPES.CIRCLE_RADIUS} />;
     case 'rect':

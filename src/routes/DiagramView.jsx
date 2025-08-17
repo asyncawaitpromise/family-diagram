@@ -16,7 +16,7 @@ const DiagramView = () => {
 
   // Zustand stores
   const { stageScale, stageX, stageY, stageSize, isPanning, setStageSize, setCanvasState, getCanvasState } = useCanvasStore();
-  const { shapes, connections, selectedId, selectedConnectionId, addShape, selectShape, selectConnection, deleteSelected, updateShapePosition, setShapes, setConnections } = usePersistedShapeStore();
+  const { shapes, connections, selectedId, selectedConnectionId, selectedIds, isMultiSelectMode, addShape, selectShape, selectConnection, deleteSelected, updateShapePosition, updateMultiShapePositions, setShapes, setConnections } = usePersistedShapeStore();
   const { getCurrentDiagram, updateDiagramShapes, updateDiagramConnections, updateDiagramCanvasState, setCurrentDiagram } = useDiagramStore();
 
   // Custom hooks for interactions
@@ -28,7 +28,7 @@ const DiagramView = () => {
     handleTouchStart,
     handleTouchMove: canvasTouchMove,
     handleTouchEnd: canvasTouchEnd,
-  } = useCanvasInteractions(stageRef);
+  } = useCanvasInteractions(stageRef, shapes);
 
   const {
     touchDragType,
@@ -146,6 +146,8 @@ const DiagramView = () => {
         isPanning={isPanning}
         shapes={shapes}
         selectedId={selectedId}
+        selectedIds={selectedIds}
+        isMultiSelectMode={isMultiSelectMode}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -157,6 +159,7 @@ const DiagramView = () => {
         onDragOver={handleCanvasDragOver}
         onShapeSelect={selectShape}
         onShapePositionUpdate={updateShapePosition}
+        onMultiShapePositionUpdate={updateMultiShapePositions}
         onDeleteSelected={deleteSelected}
         connections={connections}
         selectedConnectionId={selectedConnectionId}

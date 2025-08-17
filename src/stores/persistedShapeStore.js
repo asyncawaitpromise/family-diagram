@@ -10,6 +10,8 @@ export const usePersistedShapeStore = create(
       connections: [],
       selectedId: null,
       selectedConnectionId: null,
+      selectedIds: [], // Multi-select state
+      isMultiSelectMode: false,
 
       // Actions
       addShape: (type, x = null, y = null) => {
@@ -32,13 +34,43 @@ export const usePersistedShapeStore = create(
         }));
       },
 
-      selectShape: (id) => set({ selectedId: id, selectedConnectionId: null }),
+      selectShape: (id) => set({ selectedId: id, selectedConnectionId: null, selectedIds: [], isMultiSelectMode: false }),
 
-      selectConnection: (id) => set({ selectedConnectionId: id, selectedId: null }),
+      selectConnection: (id) => set({ selectedConnectionId: id, selectedId: null, selectedIds: [], isMultiSelectMode: false }),
 
-      deselectAll: () => set({ selectedId: null, selectedConnectionId: null }),
+      deselectAll: () => set({ selectedId: null, selectedConnectionId: null, selectedIds: [], isMultiSelectMode: false }),
+
+      // Multi-select actions
+      setMultiSelect: (ids) => set({ 
+        selectedIds: ids, 
+        isMultiSelectMode: ids.length > 1,
+        selectedId: ids.length === 1 ? ids[0] : null,
+        selectedConnectionId: null
+      }),
+
+      addToMultiSelect: (id) => set((state) => {
+        const newIds = state.selectedIds.includes(id) 
+          ? state.selectedIds.filter(existingId => existingId !== id)
+          : [...state.selectedIds, id];
+        return {
+          selectedIds: newIds,
+          isMultiSelectMode: newIds.length > 1,
+          selectedId: newIds.length === 1 ? newIds[0] : null,
+          selectedConnectionId: null
+        };
+      }),
+
+      clearMultiSelect: () => set({ selectedIds: [], isMultiSelectMode: false }),
 
       deleteSelected: () => set((state) => {
+        if (state.isMultiSelectMode && state.selectedIds.length > 0) {
+          return {
+            shapes: state.shapes.filter(shape => !state.selectedIds.includes(shape.id)),
+            selectedIds: [],
+            isMultiSelectMode: false,
+            selectedId: null,
+          };
+        }
         if (state.selectedId) {
           return {
             shapes: state.shapes.filter(shape => shape.id !== state.selectedId),
@@ -84,6 +116,15 @@ export const usePersistedShapeStore = create(
           shapes: state.shapes.map(shape => 
             shape.id === id ? { ...shape, x: newPos.x, y: newPos.y } : shape
           ),
+        }));
+      },
+
+      updateMultiShapePositions: (positions) => {
+        set((state) => ({
+          shapes: state.shapes.map(shape => {
+            const newPos = positions[shape.id];
+            return newPos ? { ...shape, x: newPos.x, y: newPos.y } : shape;
+          }),
         }));
       },
 

@@ -1,7 +1,7 @@
 import { Line, Group, Circle, Text } from 'react-konva';
 import { CANVAS_CONFIG } from '../constants/canvas';
 
-const Connection = ({ connection, fromShape, toShape, draggedShapeId, dragPosition, isSelected, onSelect, onDelete }) => {
+const Connection = ({ connection, fromShape, toShape, draggedShapeId, dragPosition, multiShapeDragPositions, isSelected, onSelect, onDelete }) => {
   if (!fromShape || !toShape) return null;
 
   const getShapeCenter = (shape, dragPos) => {
@@ -19,14 +19,13 @@ const Connection = ({ connection, fromShape, toShape, draggedShapeId, dragPositi
   };
 
   // Calculate connection points (center of shapes)
-  const fromCenter = getShapeCenter(
-    fromShape, 
-    draggedShapeId === fromShape.id ? dragPosition : null
-  );
-  const toCenter = getShapeCenter(
-    toShape, 
-    draggedShapeId === toShape.id ? dragPosition : null
-  );
+  const fromDragPos = multiShapeDragPositions?.[fromShape.id] || 
+                     (draggedShapeId === fromShape.id ? dragPosition : null);
+  const toDragPos = multiShapeDragPositions?.[toShape.id] || 
+                   (draggedShapeId === toShape.id ? dragPosition : null);
+                   
+  const fromCenter = getShapeCenter(fromShape, fromDragPos);
+  const toCenter = getShapeCenter(toShape, toDragPos);
 
   const fromX = fromCenter.x;
   const fromY = fromCenter.y;

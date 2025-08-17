@@ -13,6 +13,11 @@ export const useInteractionStore = create((set, get) => ({
   touchDragPosition: null,
   hasDraggedFromButton: false,
 
+  // Area selection state
+  isAreaSelecting: false,
+  areaSelectionStart: null,
+  areaSelectionEnd: null,
+
   // Actions
   startToolbarDrag: (type) => set({
     isDragging: true,
@@ -39,6 +44,23 @@ export const useInteractionStore = create((set, get) => ({
     touchDragType: null,
     touchDragPosition: null,
     hasDraggedFromButton: false,
+  }),
+
+  // Area selection actions
+  startAreaSelection: (start) => set({
+    isAreaSelecting: true,
+    areaSelectionStart: start,
+    areaSelectionEnd: start,
+  }),
+
+  updateAreaSelection: (end) => set({
+    areaSelectionEnd: end,
+  }),
+
+  endAreaSelection: () => set({
+    isAreaSelecting: false,
+    areaSelectionStart: null,
+    areaSelectionEnd: null,
   }),
 
   // Helper to check if currently touch dragging
