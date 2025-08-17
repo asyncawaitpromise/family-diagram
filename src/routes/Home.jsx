@@ -23,7 +23,6 @@ const Home = () => {
     handleTouchStart,
     handleTouchMove: canvasTouchMove,
     handleTouchEnd: canvasTouchEnd,
-    handleStageMove,
   } = useCanvasInteractions(stageRef);
 
   const {
@@ -90,8 +89,6 @@ const Home = () => {
         isPanning={isPanning}
         shapes={shapes}
         selectedId={selectedId}
-        onStageMove={handleStageMove}
-        onStageEnd={handleStageMove}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}

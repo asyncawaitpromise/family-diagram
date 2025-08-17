@@ -47,6 +47,9 @@ export const usePersistedShapeStore = create(
         const state = get();
         const shape = state.shapes.find(s => s.id === id);
         
+        // Always log to console for debugging
+        console.log('STORE updateShapePosition called', { id, newPos, shapeFound: !!shape });
+        
         // Get debug logging function
         const debugLog = () => {
           try {

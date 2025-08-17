@@ -60,13 +60,18 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
     onDragEnd: (e) => {
       const stage = e.target.getStage();
       const finalPos = e.target.position();
+      
       debugLog('SHAPE_DRAG_END', `Shape ${shape.id} drag ended`, {
         shapeId: shape.id,
         finalPosition: finalPos,
         originalPosition: { x: shape.x, y: shape.y },
         stageTransform: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
         totalDelta: { x: finalPos.x - shape.x, y: finalPos.y - shape.y },
-        target: e.target.constructor.name
+        target: e.target.constructor.name,
+        stagePosition: { x: stage.x(), y: stage.y() },
+        targetX: e.target.x(),
+        targetY: e.target.y(),
+        attrs: e.target.attrs
       });
       
       // Clear the drag position to reset SelectionBorder to store position
@@ -74,7 +79,28 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
         onDragMove(null);
       }
       
-      onPositionUpdate(shape.id, finalPos);
+      debugLog('SHAPE_CALLING_UPDATE', `Calling onPositionUpdate for shape ${shape.id}`, {
+        shapeId: shape.id,
+        finalPosition: finalPos,
+        finalPositionX: finalPos.x,
+        finalPositionY: finalPos.y,
+        originalPosition: { x: shape.x, y: shape.y },
+        onPositionUpdateExists: !!onPositionUpdate,
+        positionValid: !isNaN(finalPos.x) && !isNaN(finalPos.y) && isFinite(finalPos.x) && isFinite(finalPos.y)
+      });
+      
+      // Only update if position is valid
+      if (!isNaN(finalPos.x) && !isNaN(finalPos.y) && isFinite(finalPos.x) && isFinite(finalPos.y)) {
+        onPositionUpdate(shape.id, finalPos);
+      } else {
+        debugLog('SHAPE_INVALID_POSITION', `Invalid position detected for shape ${shape.id}`, {
+          shapeId: shape.id,
+          finalPosition: finalPos,
+          resettingToOriginal: true
+        });
+        // Reset to original position if invalid
+        e.target.position({ x: shape.x, y: shape.y });
+      }
     },
   };
 

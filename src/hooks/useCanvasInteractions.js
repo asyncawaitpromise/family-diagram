@@ -29,17 +29,25 @@ export const useCanvasInteractions = (stageRef) => {
   const handleMouseDown = (e) => {
     if (!e.target || typeof e.target.getStage !== 'function') return;
     
-    const clickedOnEmpty = e.target === e.target.getStage();
+    const stage = e.target.getStage();
+    const clickedOnEmpty = e.target === stage || e.target.constructor.name === 'Layer';
+    
     debugLog('CANVAS_MOUSE_DOWN', 'Canvas mouse down', {
       clickedOnEmpty,
       target: e.target.constructor.name,
       currentPanning: isPanning,
-      stageTransform: { x: stageX, y: stageY, scale: stageScale }
+      stageTransform: { x: stageX, y: stageY, scale: stageScale },
+      targetId: e.target.id ? e.target.id() : 'no-id'
     });
     
     if (clickedOnEmpty) {
       deselectAll();
       setIsPanning(true);
+      
+      // Store pan start position for manual panning
+      const pointer = stage.getPointerPosition();
+      stage._panStart = pointer;
+      stage._panStartStagePos = { x: stageX, y: stageY };
     } else {
       setIsPanning(false);
     }
@@ -49,21 +57,41 @@ export const useCanvasInteractions = (stageRef) => {
     if (!isPanning) return;
     
     const stage = e.target.getStage();
-    debugLog('CANVAS_MOUSE_MOVE', 'Canvas panning', {
-      newPosition: { x: stage.x(), y: stage.y() },
-      previousPosition: { x: stageX, y: stageY },
-      scale: stageScale,
-      isPanning
-    });
-    updatePan(stage.x(), stage.y());
+    const pointer = stage.getPointerPosition();
+    
+    if (stage._panStart) {
+      const dx = pointer.x - stage._panStart.x;
+      const dy = pointer.y - stage._panStart.y;
+      
+      const newX = stage._panStartStagePos.x + dx;
+      const newY = stage._panStartStagePos.y + dy;
+      
+      debugLog('CANVAS_MOUSE_MOVE', 'Manual panning', {
+        newPosition: { x: newX, y: newY },
+        delta: { x: dx, y: dy },
+        pointer,
+        startPos: stage._panStart
+      });
+      
+      stage.position({ x: newX, y: newY });
+      updatePan(newX, newY);
+    }
   };
 
   const handleMouseUp = () => {
-    debugLog('CANVAS_MOUSE_UP', 'Canvas mouse up', {
-      wasPanning: isPanning,
-      finalPosition: { x: stageX, y: stageY },
-      scale: stageScale
-    });
+    if (isPanning) {
+      debugLog('CANVAS_MOUSE_UP', 'Canvas mouse up - ending pan', {
+        wasPanning: isPanning,
+        finalPosition: { x: stageX, y: stageY },
+        scale: stageScale
+      });
+      
+      const stage = stageRef.current;
+      if (stage) {
+        stage._panStart = null;
+        stage._panStartStagePos = null;
+      }
+    }
     setIsPanning(false);
   };
 
@@ -175,16 +203,7 @@ export const useCanvasInteractions = (stageRef) => {
     }
   };
 
-  const handleStageMove = (e) => {
-    debugLog('STAGE_MOVE', 'Stage dragged to new position', {
-      newPosition: { x: e.target.x(), y: e.target.y() },
-      previousPosition: { x: stageX, y: stageY },
-      scale: stageScale,
-      isPanning,
-      target: e.target.constructor.name
-    });
-    updatePan(e.target.x(), e.target.y());
-  };
+  // Stage handlers removed - using manual panning now
 
   return {
     handleWheel,
@@ -194,6 +213,5 @@ export const useCanvasInteractions = (stageRef) => {
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
-    handleStageMove,
   };
 };
