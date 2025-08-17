@@ -1,7 +1,10 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { CANVAS_CONFIG } from '../constants/canvas';
 
-export const useCanvasStore = create((set, get) => ({
+export const useCanvasStore = create(
+  persist(
+    (set, get) => ({
   // Stage transform state
   stageScale: 1,
   stageX: 0,
@@ -93,4 +96,14 @@ export const useCanvasStore = create((set, get) => ({
     
     set({ stageX: x, stageY: y });
   },
-}));
+}),
+    {
+      name: 'family-diagram-canvas',
+      partialize: (state) => ({ 
+        stageX: state.stageX, 
+        stageY: state.stageY, 
+        stageScale: state.stageScale 
+      }),
+    }
+  )
+);
