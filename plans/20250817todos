@@ -1,0 +1,10 @@
+Mobile multiselect works how? 
+pc drag to drop new item doesn't work (tried to drag element maybe event.preventDefault)
+Need to consider a details panel that can expand / collapse from side
+- Panel has options to change visuals (color, edge shape)
+- Notes about specific object
+- Title which shows up on display
+- Panel shows up for connections as well
+
+Maybe a bar feature to drop a bar or other node-connection object
+- Allows for organizing relationships in a more coherant way
