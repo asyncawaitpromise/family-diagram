@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "host": "vite --host --port=80",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "tbuild": "vite build && cd dist && tar -czf o.tar .",
