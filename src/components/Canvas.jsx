@@ -19,6 +19,8 @@ const Canvas = ({
   onMouseMove,
   onMouseUp,
   onTouchStart,
+  onTouchMove,
+  onTouchEnd,
   onDrop,
   onDragOver,
   onShapeSelect,
@@ -43,6 +45,8 @@ const Canvas = ({
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       onDrop={onDrop}
       onDragOver={onDragOver}
     >

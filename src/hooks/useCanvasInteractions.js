@@ -126,6 +126,16 @@ export const useCanvasInteractions = (stageRef) => {
     if (touches.length === 1) {
       deselectAll();
       setIsPanning(true);
+      
+      // Store pan start position for manual panning (similar to mouse)
+      const touch = touches[0];
+      const stageRect = stage.container().getBoundingClientRect();
+      const pointer = {
+        x: touch.clientX - stageRect.left,
+        y: touch.clientY - stageRect.top
+      };
+      stage._panStart = pointer;
+      stage._panStartStagePos = { x: stageX, y: stageY };
     } else if (touches.length === 2) {
       setIsPanning(false);
       const touch1 = touches[0];
@@ -150,7 +160,32 @@ export const useCanvasInteractions = (stageRef) => {
       if (e.evt && e.evt.preventDefault) {
         e.evt.preventDefault();
       }
-      updatePan(stage.x(), stage.y());
+      
+      // Manual panning calculation (similar to mouse)
+      if (stage._panStart) {
+        const touch = touches[0];
+        const stageRect = stage.container().getBoundingClientRect();
+        const pointer = {
+          x: touch.clientX - stageRect.left,
+          y: touch.clientY - stageRect.top
+        };
+        
+        const dx = pointer.x - stage._panStart.x;
+        const dy = pointer.y - stage._panStart.y;
+        
+        const newX = stage._panStartStagePos.x + dx;
+        const newY = stage._panStartStagePos.y + dy;
+        
+        debugLog('CANVAS_TOUCH_MOVE', 'Manual touch panning', {
+          newPosition: { x: newX, y: newY },
+          delta: { x: dx, y: dy },
+          pointer,
+          startPos: stage._panStart
+        });
+        
+        stage.position({ x: newX, y: newY });
+        updatePan(newX, newY);
+      }
     } else if (touches.length === 2) {
       if (e.evt && e.evt.preventDefault) {
         e.evt.preventDefault();
@@ -200,6 +235,20 @@ export const useCanvasInteractions = (stageRef) => {
   const handleTouchEnd = (e) => {
     if (isPanning && e.evt && e.evt.preventDefault) {
       e.evt.preventDefault();
+    }
+    
+    if (isPanning) {
+      debugLog('CANVAS_TOUCH_END', 'Canvas touch end - ending pan', {
+        wasPanning: isPanning,
+        finalPosition: { x: stageX, y: stageY },
+        scale: stageScale
+      });
+      
+      const stage = stageRef.current;
+      if (stage) {
+        stage._panStart = null;
+        stage._panStartStagePos = null;
+      }
     }
     
     setIsPanning(false);

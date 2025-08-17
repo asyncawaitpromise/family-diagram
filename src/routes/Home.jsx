@@ -94,6 +94,8 @@ const Home = () => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onTouchStart={handleTouchStart}
+        onTouchMove={canvasTouchMove}
+        onTouchEnd={canvasTouchEnd}
         onDrop={handleCanvasDrop}
         onDragOver={handleCanvasDragOver}
         onShapeSelect={selectShape}
