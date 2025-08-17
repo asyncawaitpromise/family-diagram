@@ -2,7 +2,7 @@ export const CANVAS_CONFIG = {
   ZOOM: {
     MIN_SCALE: 0.1,
     MAX_SCALE: 5,
-    SCALE_FACTOR: 1.02
+    SCALE_FACTOR: 1.1
   },
   SHAPES: {
     DEFAULT_FILL: '#3b82f6',

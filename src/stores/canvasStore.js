@@ -47,7 +47,8 @@ export const useCanvasStore = create((set, get) => ({
       y: (pointer.y - stageY) / oldScale,
     };
 
-    const direction = delta > 0 ? 1 : -1;
+    // Positive delta (scroll down) should zoom out, negative delta (scroll up) should zoom in
+    const direction = delta > 0 ? -1 : 1;
     const scaleBy = CANVAS_CONFIG.ZOOM.SCALE_FACTOR;
     const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
     
