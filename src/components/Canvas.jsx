@@ -28,7 +28,10 @@ const Canvas = ({
   onShapeSelect,
   onShapePositionUpdate,
   onDeleteSelected,
-  connections
+  connections,
+  selectedConnectionId,
+  onConnectionSelect,
+  onConnectionDelete
 }) => {
   const selectedShape = shapes.find(shape => shape.id === selectedId);
   const [selectedShapeDragPosition, setSelectedShapeDragPosition] = useState(null);
@@ -67,6 +70,9 @@ const Canvas = ({
               toShape={toShape}
               draggedShapeId={selectedId}
               dragPosition={selectedShapeDragPosition}
+              isSelected={connection.id === selectedConnectionId}
+              onSelect={onConnectionSelect}
+              onDelete={onConnectionDelete}
             />
           );
         })}

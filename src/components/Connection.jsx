@@ -1,7 +1,7 @@
-import { Line } from 'react-konva';
+import { Line, Group, Circle, Text } from 'react-konva';
 import { CANVAS_CONFIG } from '../constants/canvas';
 
-const Connection = ({ connection, fromShape, toShape, draggedShapeId, dragPosition }) => {
+const Connection = ({ connection, fromShape, toShape, draggedShapeId, dragPosition, isSelected, onSelect, onDelete }) => {
   if (!fromShape || !toShape) return null;
 
   const getShapeCenter = (shape, dragPos) => {
@@ -33,13 +33,60 @@ const Connection = ({ connection, fromShape, toShape, draggedShapeId, dragPositi
   const toX = toCenter.x;
   const toY = toCenter.y;
 
+  // Calculate midpoint for the delete button
+  const midX = (fromX + toX) / 2;
+  const midY = (fromY + toY) / 2;
+
+  const handleLineClick = (e) => {
+    e.cancelBubble = true;
+    if (onSelect) {
+      onSelect(connection.id);
+    }
+  };
+
+  const handleDeleteClick = (e) => {
+    e.cancelBubble = true;
+    if (onDelete) {
+      onDelete(connection.id);
+    }
+  };
+
   return (
-    <Line
-      points={[fromX, fromY, toX, toY]}
-      stroke={CANVAS_CONFIG.SHAPES.DEFAULT_FILL}
-      strokeWidth={6}
-      listening={false}
-    />
+    <Group>
+      <Line
+        points={[fromX, fromY, toX, toY]}
+        stroke={isSelected ? CANVAS_CONFIG.SELECTION.BORDER_COLOR : CANVAS_CONFIG.SHAPES.DEFAULT_FILL}
+        strokeWidth={6}
+        listening={true}
+        onClick={handleLineClick}
+        onTap={handleLineClick}
+      />
+      
+      {isSelected && (
+        <Group>
+          <Circle
+            x={midX}
+            y={midY}
+            radius={CANVAS_CONFIG.SELECTION.DELETE_BUTTON_RADIUS}
+            fill={CANVAS_CONFIG.SELECTION.DELETE_BUTTON_COLOR}
+            stroke={CANVAS_CONFIG.SELECTION.DELETE_BUTTON_STROKE}
+            strokeWidth={CANVAS_CONFIG.SELECTION.DELETE_BUTTON_STROKE_WIDTH}
+            listening={true}
+            onClick={handleDeleteClick}
+            onTap={handleDeleteClick}
+          />
+          <Text
+            x={midX - 4}
+            y={midY - 6}
+            text="×"
+            fontSize={16}
+            fill="white"
+            fontStyle="bold"
+            listening={false}
+          />
+        </Group>
+      )}
+    </Group>
   );
 };
 

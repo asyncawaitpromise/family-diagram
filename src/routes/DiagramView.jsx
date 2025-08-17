@@ -16,7 +16,7 @@ const DiagramView = () => {
 
   // Zustand stores
   const { stageScale, stageX, stageY, stageSize, isPanning, setStageSize, setCanvasState, getCanvasState } = useCanvasStore();
-  const { shapes, connections, selectedId, addShape, selectShape, deleteSelected, updateShapePosition, setShapes, setConnections } = usePersistedShapeStore();
+  const { shapes, connections, selectedId, selectedConnectionId, addShape, selectShape, selectConnection, deleteSelected, updateShapePosition, setShapes, setConnections } = usePersistedShapeStore();
   const { getCurrentDiagram, updateDiagramShapes, updateDiagramConnections, updateDiagramCanvasState, setCurrentDiagram } = useDiagramStore();
 
   // Custom hooks for interactions
@@ -159,6 +159,9 @@ const DiagramView = () => {
         onShapePositionUpdate={updateShapePosition}
         onDeleteSelected={deleteSelected}
         connections={connections}
+        selectedConnectionId={selectedConnectionId}
+        onConnectionSelect={selectConnection}
+        onConnectionDelete={deleteSelected}
       />
     </div>
   );

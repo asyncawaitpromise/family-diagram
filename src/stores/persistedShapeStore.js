@@ -9,6 +9,7 @@ export const usePersistedShapeStore = create(
       shapes: [],
       connections: [],
       selectedId: null,
+      selectedConnectionId: null,
 
       // Actions
       addShape: (type, x = null, y = null) => {
@@ -31,17 +32,26 @@ export const usePersistedShapeStore = create(
         }));
       },
 
-      selectShape: (id) => set({ selectedId: id }),
+      selectShape: (id) => set({ selectedId: id, selectedConnectionId: null }),
 
-      deselectAll: () => set({ selectedId: null }),
+      selectConnection: (id) => set({ selectedConnectionId: id, selectedId: null }),
+
+      deselectAll: () => set({ selectedId: null, selectedConnectionId: null }),
 
       deleteSelected: () => set((state) => {
-        if (!state.selectedId) return state;
-        
-        return {
-          shapes: state.shapes.filter(shape => shape.id !== state.selectedId),
-          selectedId: null,
-        };
+        if (state.selectedId) {
+          return {
+            shapes: state.shapes.filter(shape => shape.id !== state.selectedId),
+            selectedId: null,
+          };
+        }
+        if (state.selectedConnectionId) {
+          return {
+            connections: state.connections.filter(conn => conn.id !== state.selectedConnectionId),
+            selectedConnectionId: null,
+          };
+        }
+        return state;
       }),
 
       updateShapePosition: (id, newPos) => {
@@ -80,6 +90,11 @@ export const usePersistedShapeStore = create(
       getSelectedShape: () => {
         const { shapes, selectedId } = get();
         return shapes.find(shape => shape.id === selectedId);
+      },
+
+      getSelectedConnection: () => {
+        const { connections, selectedConnectionId } = get();
+        return connections.find(conn => conn.id === selectedConnectionId);
       },
 
       addConnection: (fromId, toId) => {
