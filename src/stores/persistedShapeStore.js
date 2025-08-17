@@ -43,11 +43,35 @@ export const usePersistedShapeStore = create(
         };
       }),
 
-      updateShapePosition: (id, newPos) => set((state) => ({
-        shapes: state.shapes.map(shape => 
-          shape.id === id ? { ...shape, x: newPos.x, y: newPos.y } : shape
-        ),
-      })),
+      updateShapePosition: (id, newPos) => {
+        const state = get();
+        const shape = state.shapes.find(s => s.id === id);
+        
+        // Get debug logging function
+        const debugLog = () => {
+          try {
+            const { debugLog: logFn } = require('./interactionStore').useInteractionStore.getState();
+            return logFn;
+          } catch {
+            return () => {}; // Fallback if store not available
+          }
+        };
+        
+        if (shape) {
+          debugLog()('SHAPE_POSITION_UPDATE', `Shape ${id} position updated in store`, {
+            shapeId: id,
+            oldPosition: { x: shape.x, y: shape.y },
+            newPosition: newPos,
+            delta: { x: newPos.x - shape.x, y: newPos.y - shape.y }
+          });
+        }
+        
+        set((state) => ({
+          shapes: state.shapes.map(shape => 
+            shape.id === id ? { ...shape, x: newPos.x, y: newPos.y } : shape
+          ),
+        }));
+      },
 
       getSelectedShape: () => {
         const { shapes, selectedId } = get();

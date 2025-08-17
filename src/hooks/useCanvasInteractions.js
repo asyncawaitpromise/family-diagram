@@ -15,7 +15,7 @@ export const useCanvasInteractions = (stageRef) => {
   } = useCanvasStore();
   
   const { deselectAll } = usePersistedShapeStore();
-  const { isTouchDragging } = useInteractionStore();
+  const { isTouchDragging, debugLog } = useInteractionStore();
 
   const handleWheel = (e) => {
     e.evt.preventDefault();
@@ -30,6 +30,13 @@ export const useCanvasInteractions = (stageRef) => {
     if (!e.target || typeof e.target.getStage !== 'function') return;
     
     const clickedOnEmpty = e.target === e.target.getStage();
+    debugLog('CANVAS_MOUSE_DOWN', 'Canvas mouse down', {
+      clickedOnEmpty,
+      target: e.target.constructor.name,
+      currentPanning: isPanning,
+      stageTransform: { x: stageX, y: stageY, scale: stageScale }
+    });
+    
     if (clickedOnEmpty) {
       deselectAll();
       setIsPanning(true);
@@ -42,10 +49,21 @@ export const useCanvasInteractions = (stageRef) => {
     if (!isPanning) return;
     
     const stage = e.target.getStage();
+    debugLog('CANVAS_MOUSE_MOVE', 'Canvas panning', {
+      newPosition: { x: stage.x(), y: stage.y() },
+      previousPosition: { x: stageX, y: stageY },
+      scale: stageScale,
+      isPanning
+    });
     updatePan(stage.x(), stage.y());
   };
 
   const handleMouseUp = () => {
+    debugLog('CANVAS_MOUSE_UP', 'Canvas mouse up', {
+      wasPanning: isPanning,
+      finalPosition: { x: stageX, y: stageY },
+      scale: stageScale
+    });
     setIsPanning(false);
   };
 
@@ -158,6 +176,13 @@ export const useCanvasInteractions = (stageRef) => {
   };
 
   const handleStageMove = (e) => {
+    debugLog('STAGE_MOVE', 'Stage dragged to new position', {
+      newPosition: { x: e.target.x(), y: e.target.y() },
+      previousPosition: { x: stageX, y: stageY },
+      scale: stageScale,
+      isPanning,
+      target: e.target.constructor.name
+    });
     updatePan(e.target.x(), e.target.y());
   };
 

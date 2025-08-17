@@ -19,7 +19,24 @@ export const useCanvasStore = create((set, get) => ({
   })),
 
   setStageSize: (size) => set({ stageSize: size }),
-  setIsPanning: (isPanning) => set({ isPanning }),
+  setIsPanning: (isPanning) => {
+    // Get debug logging function
+    const debugLog = () => {
+      try {
+        const { debugLog: logFn } = require('./interactionStore').useInteractionStore.getState();
+        return logFn;
+      } catch {
+        return () => {}; // Fallback if store not available
+      }
+    };
+    
+    debugLog()('CANVAS_PANNING_STATE', `Panning ${isPanning ? 'started' : 'stopped'}`, {
+      isPanning,
+      currentTransform: get()
+    });
+    
+    set({ isPanning });
+  },
 
   // Zoom action with bounds
   zoom: (delta, pointer, currentStage) => {
@@ -52,5 +69,27 @@ export const useCanvasStore = create((set, get) => ({
   },
 
   // Pan action
-  updatePan: (x, y) => set({ stageX: x, stageY: y }),
+  updatePan: (x, y) => {
+    const current = get();
+    
+    // Get debug logging function
+    const debugLog = () => {
+      try {
+        const { debugLog: logFn } = require('./interactionStore').useInteractionStore.getState();
+        return logFn;
+      } catch {
+        return () => {}; // Fallback if store not available
+      }
+    };
+    
+    debugLog()('CANVAS_PAN_UPDATE', 'Canvas position updated', {
+      newPosition: { x, y },
+      oldPosition: { x: current.stageX, y: current.stageY },
+      delta: { x: x - current.stageX, y: y - current.stageY },
+      scale: current.stageScale,
+      isPanning: current.isPanning
+    });
+    
+    set({ stageX: x, stageY: y });
+  },
 }));
