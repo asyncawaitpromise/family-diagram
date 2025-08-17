@@ -1,10 +1,13 @@
 import { Circle, Rect, Star } from 'react-konva';
+import { useRef, forwardRef } from 'react';
 import { CANVAS_CONFIG } from '../constants/canvas';
 import { useInteractionStore } from '../stores/interactionStore';
 
-const Shape = ({ shape, isSelected, onSelect, onPositionUpdate }) => {
+const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDragMove }, ref) => {
   const { debugLog } = useInteractionStore();
+  const shapeRef = useRef();
   const commonProps = {
+    ref: shapeRef,
     id: shape.id,
     x: shape.x,
     y: shape.y,
@@ -48,6 +51,11 @@ const Shape = ({ shape, isSelected, onSelect, onPositionUpdate }) => {
         deltaY: currentPos.y - shape.y,
         target: e.target.constructor.name
       });
+      
+      // Notify the SelectionBorder of the new position
+      if (onDragMove) {
+        onDragMove(currentPos);
+      }
     },
     onDragEnd: (e) => {
       const stage = e.target.getStage();
@@ -60,6 +68,12 @@ const Shape = ({ shape, isSelected, onSelect, onPositionUpdate }) => {
         totalDelta: { x: finalPos.x - shape.x, y: finalPos.y - shape.y },
         target: e.target.constructor.name
       });
+      
+      // Clear the drag position to reset SelectionBorder to store position
+      if (onDragMove) {
+        onDragMove(null);
+      }
+      
       onPositionUpdate(shape.id, finalPos);
     },
   };
@@ -79,6 +93,8 @@ const Shape = ({ shape, isSelected, onSelect, onPositionUpdate }) => {
     default:
       return null;
   }
-};
+});
+
+Shape.displayName = 'Shape';
 
 export default Shape;

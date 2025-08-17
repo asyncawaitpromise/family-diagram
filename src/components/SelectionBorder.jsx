@@ -1,13 +1,34 @@
 import { Rect, Circle, Line } from 'react-konva';
+import { useState, useEffect } from 'react';
 import { CANVAS_CONFIG } from '../constants/canvas';
 
-const SelectionBorder = ({ shape, onDelete }) => {
+const SelectionBorder = ({ shape, dragPosition, onDelete }) => {
+  const [internalDragPosition, setInternalDragPosition] = useState({ x: shape.x, y: shape.y });
+  
+  // Update internal position when shape changes (new selection or shape store update)
+  useEffect(() => {
+    setInternalDragPosition({ x: shape.x, y: shape.y });
+  }, [shape.x, shape.y, shape.id]);
+  
+  // Update internal position when dragging occurs
+  useEffect(() => {
+    if (dragPosition) {
+      setInternalDragPosition(dragPosition);
+    } else if (dragPosition === null) {
+      // Reset to shape store position when drag ends
+      setInternalDragPosition({ x: shape.x, y: shape.y });
+    }
+  }, [dragPosition, shape.x, shape.y]);
   const { BORDER_OFFSET, BORDER_SIZE, DELETE_BUTTON_RADIUS } = CANVAS_CONFIG.SELECTION;
   
-  const borderX = shape.type === 'rect' ? shape.x - BORDER_OFFSET : shape.x - (BORDER_SIZE / 2);
-  const borderY = shape.type === 'rect' ? shape.y - BORDER_OFFSET : shape.y - (BORDER_SIZE / 2);
-  const deleteButtonX = shape.type === 'rect' ? shape.x + BORDER_SIZE - BORDER_OFFSET : shape.x + (BORDER_SIZE / 2) - BORDER_OFFSET;
-  const deleteButtonY = shape.type === 'rect' ? shape.y - BORDER_OFFSET : shape.y - (BORDER_SIZE / 2);
+  // Use internalDragPosition for real-time updates during dragging
+  const currentX = internalDragPosition.x;
+  const currentY = internalDragPosition.y;
+  
+  const borderX = shape.type === 'rect' ? currentX - BORDER_OFFSET : currentX - (BORDER_SIZE / 2);
+  const borderY = shape.type === 'rect' ? currentY - BORDER_OFFSET : currentY - (BORDER_SIZE / 2);
+  const deleteButtonX = shape.type === 'rect' ? currentX + BORDER_SIZE - BORDER_OFFSET : currentX + (BORDER_SIZE / 2) - BORDER_OFFSET;
+  const deleteButtonY = shape.type === 'rect' ? currentY - BORDER_OFFSET : currentY - (BORDER_SIZE / 2);
 
   return (
     <>

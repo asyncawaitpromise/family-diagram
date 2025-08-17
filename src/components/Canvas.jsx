@@ -1,4 +1,5 @@
 import { Stage, Layer } from 'react-konva';
+import { useState } from 'react';
 import Shape from './Shape';
 import SelectionBorder from './SelectionBorder';
 
@@ -25,6 +26,7 @@ const Canvas = ({
   onDeleteSelected
 }) => {
   const selectedShape = shapes.find(shape => shape.id === selectedId);
+  const [selectedShapeDragPosition, setSelectedShapeDragPosition] = useState(null);
 
   return (
     <Stage
@@ -36,8 +38,8 @@ const Canvas = ({
       x={stageX}
       y={stageY}
       draggable={isPanning}
-      onDragMove={onStageMove}
-      onDragEnd={onStageEnd}
+      onDragMove={isPanning ? onStageMove : undefined}
+      onDragEnd={isPanning ? onStageEnd : undefined}
       onWheel={onWheel}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
@@ -54,12 +56,14 @@ const Canvas = ({
             isSelected={shape.id === selectedId}
             onSelect={onShapeSelect}
             onPositionUpdate={onShapePositionUpdate}
+            onDragMove={shape.id === selectedId ? setSelectedShapeDragPosition : undefined}
           />
         ))}
         
         {selectedShape && (
           <SelectionBorder
             shape={selectedShape}
+            dragPosition={selectedShapeDragPosition}
             onDelete={onDeleteSelected}
           />
         )}
