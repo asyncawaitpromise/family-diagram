@@ -1,18 +1,23 @@
 import { useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Canvas from '../components/Canvas';
 import Toolbar from '../components/Toolbar';
 import TouchDragPreview from '../components/TouchDragPreview';
 import { useCanvasStore } from '../stores/canvasStore';
 import { usePersistedShapeStore } from '../stores/persistedShapeStore';
+import { useDiagramStore } from '../stores/diagramStore';
 import { useCanvasInteractions } from '../hooks/useCanvasInteractions';
 import { useDragDropInteractions } from '../hooks/useDragDropInteractions';
 
-const Home = () => {
+const DiagramView = () => {
+  const { diagramId } = useParams();
+  const navigate = useNavigate();
   const stageRef = useRef();
 
   // Zustand stores
-  const { stageScale, stageX, stageY, stageSize, isPanning, setStageSize } = useCanvasStore();
-  const { shapes, selectedId, addShape, selectShape, deleteSelected, updateShapePosition } = usePersistedShapeStore();
+  const { stageScale, stageX, stageY, stageSize, isPanning, setStageSize, setCanvasState, getCanvasState } = useCanvasStore();
+  const { shapes, selectedId, addShape, selectShape, deleteSelected, updateShapePosition, setShapes } = usePersistedShapeStore();
+  const { getCurrentDiagram, updateDiagramShapes, updateDiagramCanvasState, setCurrentDiagram } = useDiagramStore();
 
   // Custom hooks for interactions
   const {
@@ -35,6 +40,39 @@ const Home = () => {
     handleTouchMove: dragTouchMove,
     handleTouchEnd: dragTouchEnd,
   } = useDragDropInteractions(stageRef);
+
+  // Load diagram data when component mounts or diagramId changes
+  useEffect(() => {
+    if (diagramId) {
+      setCurrentDiagram(diagramId);
+      const currentDiagram = getCurrentDiagram();
+      if (currentDiagram) {
+        // Load shapes
+        if (currentDiagram.shapes) {
+          setShapes(currentDiagram.shapes);
+        }
+        // Load canvas state
+        if (currentDiagram.canvasState) {
+          setCanvasState(currentDiagram.canvasState);
+        }
+      }
+    }
+  }, [diagramId, setCurrentDiagram, getCurrentDiagram, setShapes, setCanvasState]);
+
+  // Save shapes to diagram whenever shapes change
+  useEffect(() => {
+    if (diagramId && shapes.length >= 0) {
+      updateDiagramShapes(diagramId, shapes);
+    }
+  }, [shapes, diagramId, updateDiagramShapes]);
+
+  // Save canvas state to diagram whenever canvas position/zoom changes
+  useEffect(() => {
+    if (diagramId) {
+      const currentCanvasState = getCanvasState();
+      updateDiagramCanvasState(diagramId, currentCanvasState);
+    }
+  }, [stageX, stageY, stageScale, diagramId, getCanvasState, updateDiagramCanvasState]);
 
   // Handle window resize
   useEffect(() => {
@@ -64,6 +102,14 @@ const Home = () => {
       onTouchMove={combinedTouchMove}
       onTouchEnd={combinedTouchEnd}
     >
+      {/* Home Button */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-4 left-4 z-10 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg shadow-sm border border-gray-200 text-sm font-medium transition-colors"
+      >
+        ← Home
+      </button>
+
       {/* Version */}
       <div className="absolute top-4 right-4 z-10 text-sm text-gray-500">
         v.0.0.5
@@ -106,4 +152,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default DiagramView;

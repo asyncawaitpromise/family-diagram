@@ -96,6 +96,19 @@ export const useCanvasStore = create(
     
     set({ stageX: x, stageY: y });
   },
+
+  // Set canvas state (for loading diagram-specific state)
+  setCanvasState: (canvasState) => set({
+    stageX: canvasState.stageX || 0,
+    stageY: canvasState.stageY || 0,
+    stageScale: canvasState.stageScale || 1,
+  }),
+
+  // Get current canvas state (for saving diagram-specific state)
+  getCanvasState: () => {
+    const { stageX, stageY, stageScale } = get();
+    return { stageX, stageY, stageScale };
+  },
 }),
     {
       name: 'family-diagram-canvas',

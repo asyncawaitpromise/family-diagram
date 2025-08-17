@@ -82,6 +82,8 @@ export const usePersistedShapeStore = create(
       },
 
       clearAll: () => set({ shapes: [], selectedId: null }),
+
+      setShapes: (shapes) => set({ shapes, selectedId: null }),
     }),
     {
       name: 'family-diagram-shapes',
