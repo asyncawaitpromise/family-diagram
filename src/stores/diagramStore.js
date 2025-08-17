@@ -15,6 +15,7 @@ export const useDiagramStore = create(
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           shapes: [],
+          connections: [],
           canvasState: {
             stageX: 0,
             stageY: 0,
@@ -42,6 +43,16 @@ export const useDiagramStore = create(
           diagrams: state.diagrams.map(diagram =>
             diagram.id === diagramId
               ? { ...diagram, shapes, updatedAt: new Date().toISOString() }
+              : diagram
+          ),
+        }));
+      },
+
+      updateDiagramConnections: (diagramId, connections) => {
+        set((state) => ({
+          diagrams: state.diagrams.map(diagram =>
+            diagram.id === diagramId
+              ? { ...diagram, connections, updatedAt: new Date().toISOString() }
               : diagram
           ),
         }));

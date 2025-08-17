@@ -2,6 +2,8 @@ import { Stage, Layer } from 'react-konva';
 import { useState } from 'react';
 import Shape from './Shape';
 import SelectionBorder from './SelectionBorder';
+import Connection from './Connection';
+import { useShapeConnections } from '../hooks/useShapeConnections';
 
 const Canvas = ({
   stageRef,
@@ -25,10 +27,12 @@ const Canvas = ({
   onDragOver,
   onShapeSelect,
   onShapePositionUpdate,
-  onDeleteSelected
+  onDeleteSelected,
+  connections
 }) => {
   const selectedShape = shapes.find(shape => shape.id === selectedId);
   const [selectedShapeDragPosition, setSelectedShapeDragPosition] = useState(null);
+  const { handleDragStart, handleDragEnd } = useShapeConnections();
 
   return (
     <Stage
@@ -51,6 +55,22 @@ const Canvas = ({
       onDragOver={onDragOver}
     >
       <Layer>
+        {/* Render connections first so they appear behind shapes */}
+        {connections && connections.map(connection => {
+          const fromShape = shapes.find(s => s.id === connection.fromId);
+          const toShape = shapes.find(s => s.id === connection.toId);
+          return (
+            <Connection
+              key={connection.id}
+              connection={connection}
+              fromShape={fromShape}
+              toShape={toShape}
+              draggedShapeId={selectedId}
+              dragPosition={selectedShapeDragPosition}
+            />
+          );
+        })}
+        
         {shapes.map(shape => (
           <Shape
             key={shape.id}
@@ -59,6 +79,8 @@ const Canvas = ({
             onSelect={onShapeSelect}
             onPositionUpdate={onShapePositionUpdate}
             onDragMove={shape.id === selectedId ? setSelectedShapeDragPosition : undefined}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           />
         ))}
         

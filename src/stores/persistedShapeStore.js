@@ -7,6 +7,7 @@ export const usePersistedShapeStore = create(
   persist(
     (set, get) => ({
       shapes: [],
+      connections: [],
       selectedId: null,
 
       // Actions
@@ -81,13 +82,31 @@ export const usePersistedShapeStore = create(
         return shapes.find(shape => shape.id === selectedId);
       },
 
-      clearAll: () => set({ shapes: [], selectedId: null }),
+      addConnection: (fromId, toId) => {
+        const newConnection = {
+          id: Date.now().toString(),
+          fromId,
+          toId,
+        };
+        
+        set((state) => ({
+          connections: [...state.connections, newConnection],
+        }));
+      },
+
+      removeConnection: (id) => set((state) => ({
+        connections: state.connections.filter(conn => conn.id !== id),
+      })),
+
+      clearAll: () => set({ shapes: [], connections: [], selectedId: null }),
 
       setShapes: (shapes) => set({ shapes, selectedId: null }),
+
+      setConnections: (connections) => set({ connections }),
     }),
     {
       name: 'family-diagram-shapes',
-      partialize: (state) => ({ shapes: state.shapes }), // Only persist shapes, not selectedId
+      partialize: (state) => ({ shapes: state.shapes, connections: state.connections }), // Only persist shapes and connections, not selectedId
     }
   )
 );

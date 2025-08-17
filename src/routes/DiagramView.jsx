@@ -16,8 +16,8 @@ const DiagramView = () => {
 
   // Zustand stores
   const { stageScale, stageX, stageY, stageSize, isPanning, setStageSize, setCanvasState, getCanvasState } = useCanvasStore();
-  const { shapes, selectedId, addShape, selectShape, deleteSelected, updateShapePosition, setShapes } = usePersistedShapeStore();
-  const { getCurrentDiagram, updateDiagramShapes, updateDiagramCanvasState, setCurrentDiagram } = useDiagramStore();
+  const { shapes, connections, selectedId, addShape, selectShape, deleteSelected, updateShapePosition, setShapes, setConnections } = usePersistedShapeStore();
+  const { getCurrentDiagram, updateDiagramShapes, updateDiagramConnections, updateDiagramCanvasState, setCurrentDiagram } = useDiagramStore();
 
   // Custom hooks for interactions
   const {
@@ -51,13 +51,17 @@ const DiagramView = () => {
         if (currentDiagram.shapes) {
           setShapes(currentDiagram.shapes);
         }
+        // Load connections
+        if (currentDiagram.connections) {
+          setConnections(currentDiagram.connections);
+        }
         // Load canvas state
         if (currentDiagram.canvasState) {
           setCanvasState(currentDiagram.canvasState);
         }
       }
     }
-  }, [diagramId, setCurrentDiagram, getCurrentDiagram, setShapes, setCanvasState]);
+  }, [diagramId, setCurrentDiagram, getCurrentDiagram, setShapes, setConnections, setCanvasState]);
 
   // Save shapes to diagram whenever shapes change
   useEffect(() => {
@@ -65,6 +69,13 @@ const DiagramView = () => {
       updateDiagramShapes(diagramId, shapes);
     }
   }, [shapes, diagramId, updateDiagramShapes]);
+
+  // Save connections to diagram whenever connections change
+  useEffect(() => {
+    if (diagramId && connections.length >= 0) {
+      updateDiagramConnections(diagramId, connections);
+    }
+  }, [connections, diagramId, updateDiagramConnections]);
 
   // Save canvas state to diagram whenever canvas position/zoom changes
   useEffect(() => {
@@ -147,6 +158,7 @@ const DiagramView = () => {
         onShapeSelect={selectShape}
         onShapePositionUpdate={updateShapePosition}
         onDeleteSelected={deleteSelected}
+        connections={connections}
       />
     </div>
   );

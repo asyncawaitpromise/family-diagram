@@ -3,7 +3,7 @@ import { useRef, forwardRef } from 'react';
 import { CANVAS_CONFIG } from '../constants/canvas';
 import { useInteractionStore } from '../stores/interactionStore';
 
-const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDragMove }, ref) => {
+const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDragMove, onDragStart, onDragEnd }, ref) => {
   const { debugLog } = useInteractionStore();
   const shapeRef = useRef();
   const commonProps = {
@@ -38,6 +38,10 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
         isSelected,
         target: e.target.constructor.name
       });
+      
+      if (onDragStart) {
+        onDragStart(shape.id, { x: shape.x, y: shape.y });
+      }
     },
     onDragMove: (e) => {
       const stage = e.target.getStage();
@@ -88,6 +92,15 @@ const Shape = forwardRef(({ shape, isSelected, onSelect, onPositionUpdate, onDra
         onPositionUpdateExists: !!onPositionUpdate,
         positionValid: !isNaN(finalPos.x) && !isNaN(finalPos.y) && isFinite(finalPos.x) && isFinite(finalPos.y)
       });
+      
+      if (onDragEnd) {
+        const shouldUpdate = onDragEnd(shape.id, finalPos, { x: shape.x, y: shape.y });
+        if (!shouldUpdate) {
+          // Reset to original position
+          e.target.position({ x: shape.x, y: shape.y });
+          return;
+        }
+      }
       
       // Only update if position is valid
       if (!isNaN(finalPos.x) && !isNaN(finalPos.y) && isFinite(finalPos.x) && isFinite(finalPos.y)) {
