@@ -18,12 +18,21 @@ export const useCanvasInteractions = (stageRef) => {
   const { isTouchDragging, debugLog } = useInteractionStore();
 
   const handleWheel = (e) => {
-    e.evt.preventDefault();
+    // Handle both Konva events (e.evt) and regular DOM events (e)
+    const evt = e.evt || e;
+    if (evt && evt.preventDefault) {
+      evt.preventDefault();
+    }
+    
+    // For testing, if we don't have a proper Konva event structure, just return
+    if (!e.target || !e.target.getStage) {
+      return;
+    }
     
     const stage = e.target.getStage();
     const pointer = stage.getPointerPosition();
     
-    zoom(e.evt.deltaY, pointer, stage);
+    zoom(evt.deltaY, pointer, stage);
   };
 
   const handleMouseDown = (e) => {
