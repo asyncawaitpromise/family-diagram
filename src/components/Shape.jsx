@@ -13,7 +13,7 @@ const Shape = forwardRef(({ shape, displayShape, isSelected, onSelect, onPositio
     x: renderShape.x,
     y: renderShape.y,
     fill: renderShape.fill,
-    draggable: isSelected,
+    draggable: true,
     onClick: () => {
       debugLog('SHAPE_CLICK', `Shape ${shape.id} clicked`, { 
         shapeId: shape.id, 
@@ -39,6 +39,11 @@ const Shape = forwardRef(({ shape, displayShape, isSelected, onSelect, onPositio
         isSelected,
         target: e.target.constructor.name
       });
+      
+      // Auto-select the shape when drag starts if not already selected
+      if (!isSelected) {
+        onSelect(shape.id);
+      }
       
       if (onDragStart) {
         onDragStart(shape.id, { x: shape.x, y: shape.y });
